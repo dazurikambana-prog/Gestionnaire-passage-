@@ -984,6 +984,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1018,6 +1019,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="tab" onclick="showTab('stats',this)">② Statistiques</div>
     <div class="tab" onclick="showTab('analyse',this)">③ Analyse & Rapport</div>
     <div class="tab" onclick="showTab('passage',this)">④ Bilan de Passage</div>
+    <div class="tab" onclick="showTab('cep',this)">⑤ Examen Blanc CEP</div>
   </div>
 
   <!-- ═══════ TAB 1 : SAISIE ═══════ -->
@@ -1075,6 +1077,43 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="card">
       <div class="card-header">👤 Configuration du tableau</div>
       <div class="card-body">
+        <!-- SÉLECTEUR DE MATIÈRES -->
+        <div style="background:#f0f4ff;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #c5cae9;">
+          <div style="font-weight:bold;color:var(--bleu);margin-bottom:10px;font-size:13px;">📚 Matières du cours (cochez celles qui s'appliquent à cette classe)</div>
+          <div id="matieres-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 18px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Lecture" checked> Lecture</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="C.O"> C.O</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Anglais"> Anglais</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="E.E" checked> E.E</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="ES" checked> ES</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EST" checked> EST</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Maths" checked> Maths</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Dictée" checked> Dictée</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Vivant" checked> EA/Vivant</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Dessin"> EA/Dessin</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Couture"> EA/Couture</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EPS" checked> EPS</label>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:#666;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <span id="nb-matieres-badge" style="background:var(--or);color:#333;padding:3px 10px;border-radius:10px;font-weight:bold;">6 matières sélectionnées</span>
+            <button onclick="toutSelectionner(true)" style="background:none;border:1px solid var(--bleu);color:var(--bleu);padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;">Tout cocher</button>
+            <button onclick="toutSelectionner(false)" style="background:none;border:1px solid #999;color:#555;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;">Tout décocher</button>
+          </div>
+          <!-- SEUIL DE PASSAGE PAR NOMBRE DE MATIÈRES -->
+          <div style="margin-top:12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;">
+            <span style="font-weight:bold;color:#b8860b;font-size:13px;">🎯 Seuil de passage (matières) :</span>
+            <label style="font-size:13px;color:#555;display:flex;align-items:center;gap:6px;">
+              L'élève doit avoir ≥ seuil/20 dans au moins
+              <input type="number" id="seuil-mat-num" min="1" max="12" placeholder="auto" step="1"
+                style="width:56px;padding:4px 6px;border:2px solid #ffe082;border-radius:5px;font-size:14px;font-weight:bold;text-align:center;background:#fffde7;"
+                oninput="onSeuilMatChange()">
+              matière(s) sur <strong id="nb-mat-total">?</strong>
+            </label>
+            <span id="seuil-mat-badge" style="background:#ffc107;color:#333;padding:3px 10px;border-radius:10px;font-weight:bold;font-size:12px;">Seuil passage : ?/?</span>
+            <span style="color:#888;font-size:11px;font-style:italic;">Le standard MEMP est 6 matières — modifiable selon votre contexte</span>
+          </div>
+        </div>
+
         <div class="config-row">
           <label>Nombre d'élèves inscrits :</label>
           <input type="number" id="nb-eleves" min="1" max="100" placeholder="ex: 35">
@@ -1084,31 +1123,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <button class="btn btn-outline" onclick="classerParMerite()" style="padding:7px 18px;" title="Trie les élèves du 1er au dernier selon leur rang">🏆 Classer par mérite</button>
         </div>
         <div class="info-banner">
-          ℹ️ <span>Saisissez le nombre d'élèves inscrits puis cliquez sur <strong>✦ Générer le tableau</strong> pour commencer la saisie.</span>
+          ℹ️ <span>Choisissez les matières, saisissez le nombre d'élèves puis cliquez sur <strong>✦ Générer le tableau</strong>.</span>
         </div>
 
-        <!-- TABLEAU DE SAISIE -->
         <div class="table-wrap">
           <table id="main-table">
-            <thead>
+            <thead id="main-thead">
               <tr>
                 <th>N°</th>
                 <th style="min-width:160px;text-align:left;padding-left:10px;">Nom et prénoms</th>
                 <th>Sexe</th>
-                <th>Lecture</th>
-                <th>E.E</th>
-                <th>ES</th>
-                <th>EST</th>
-                <th>Maths</th>
-                <th>Dictée</th>
-                <th>EA/Vivant</th>
-                <th>EA/Plastique</th>
-                <th>EPS</th>
-                <th>Total</th>
-                <th>Moy./20</th>
-                <th>Mat.≥10</th>
-                <th>Seuil</th>
-                <th>Rang</th>
+                <th>Lecture</th><th>E.E</th><th>ES</th><th>EST</th><th>Maths</th><th>Dictée</th><th>EA/Vivant</th><th>EA/Couture</th><th>EPS</th>
+                <th>Total</th><th>Moy./20</th><th>Mat.≥10</th><th>Seuil</th><th>Rang</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -1367,6 +1393,250 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     </div>
   </div>
 
+  <!-- ═══════ TAB 5 : EXAMEN BLANC CEP ═══════ -->
+  <div class="tab-content" id="tab-cep">
+    <div style="padding:18px;">
+
+      <!-- EN-TÊTE CONFIGURABLE -->
+      <div style="background:linear-gradient(135deg,var(--bleu),#1a237e);color:#fff;border-radius:10px;padding:18px 22px;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:bold;text-align:center;letter-spacing:1px;margin-bottom:12px;">📋 EXAMEN BLANC CEP — GESTION DU CENTRE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px;">
+          <div><label style="opacity:.8;font-size:11px;">Nom du Centre</label><br>
+            <input id="cep-centre" type="text" placeholder="Ex: CS ZOGBODOMEY-CENTRE" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-weight:bold;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+          <div><label style="opacity:.8;font-size:11px;">Chef de Centre</label><br>
+            <input id="cep-chef" type="text" placeholder="Nom du Chef de Centre" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-weight:bold;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+          <div><label style="opacity:.8;font-size:11px;">Localité / Commune</label><br>
+            <input id="cep-commune" type="text" placeholder="Ex: Zogbodomey" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+          <div><label style="opacity:.8;font-size:11px;">Département</label><br>
+            <input id="cep-depart" type="text" placeholder="Ex: Zou" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+          <div><label style="opacity:.8;font-size:11px;">Année scolaire</label><br>
+            <input id="cep-annee" type="text" value="2025-2026" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+          <div><label style="opacity:.8;font-size:11px;">Date du PV</label><br>
+            <input id="cep-date" type="text" placeholder="Ex: 15 mai 2026" style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-size:13px;color:#333;margin-top:3px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- BARRE D'ACTIONS -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center;">
+        <button onclick="cepImportListeModal()" style="background:#607d8b;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📥 Importer la liste (canevas)</button>
+        <button onclick="cepSauvegarder()" style="background:#2196F3;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">💾 Sauvegarder</button>
+        <button onclick="cepCharger()" style="background:#ff9800;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">🔄 Charger</button>
+        <button onclick="cepExporterJSON()" style="background:#9c27b0;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📤 Exporter JSON</button>
+        <label style="background:#455a64;color:#fff;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📂 Importer JSON<input type="file" id="cep-import-json" accept=".json" style="display:none" onchange="cepImporterJSON(event)"></label>
+        <button onclick="cepTelechargePDF1(this)" style="background:#e91e63;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">⬇ Télécharger en PDF</button>
+        <span id="cep-nb-badge" style="background:var(--or);color:#333;padding:6px 12px;border-radius:20px;font-weight:bold;font-size:13px;margin-left:auto;">0 candidat(s)</span>
+      </div>
+
+      <!-- MODAL IMPORT LISTE -->
+      <div id="cep-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;padding:28px;width:min(720px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.4);">
+          <h3 style="margin-top:0;color:var(--bleu);">📥 Importer la liste des candidats</h3>
+
+          <!-- ONGLETS DU MODAL -->
+          <div style="display:flex;gap:0;border-bottom:2px solid #e0e0e0;margin-bottom:18px;">
+            <button id="cep-tab-excel" onclick="cepModalTab('excel')" style="padding:8px 18px;border:none;border-bottom:3px solid var(--bleu);background:none;font-weight:bold;color:var(--bleu);cursor:pointer;font-size:13px;">📊 Fichier Excel</button>
+            <button id="cep-tab-json" onclick="cepModalTab('json')" style="padding:8px 18px;border:none;border-bottom:3px solid transparent;background:none;font-weight:bold;color:#999;cursor:pointer;font-size:13px;">📄 Fichier JSON</button>
+            <button id="cep-tab-texte" onclick="cepModalTab('texte')" style="padding:8px 18px;border:none;border-bottom:3px solid transparent;background:none;font-weight:bold;color:#999;cursor:pointer;font-size:13px;">✏️ Saisie manuelle</button>
+          </div>
+
+          <!-- PANNEAU EXCEL -->
+          <div id="cep-panel-excel">
+            <div style="background:#e8f5e9;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;">
+              <b>Format attendu dans le fichier Excel :</b><br>
+              <span style="font-size:12px;color:#555;">Les 4 premières colonnes (à partir de la 1ère ligne de données) doivent contenir :</span>
+              <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                <span style="background:#1565c0;color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:bold;">A : N° de table</span>
+                <span style="background:#1565c0;color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:bold;">B : Nom et Prénoms</span>
+                <span style="background:#1565c0;color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:bold;">C : Sexe (M/F)</span>
+                <span style="background:#1565c0;color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:bold;">D : École de provenance</span>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:#777;">Les lignes d'en-tête seront ignorées automatiquement si la première colonne n'est pas un numéro.</div>
+            </div>
+            <label style="display:block;border:2px dashed #90caf9;border-radius:8px;padding:30px;text-align:center;cursor:pointer;color:#1565c0;font-size:14px;font-weight:bold;transition:background .2s;" onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='#fff'">
+              📂 Cliquer pour choisir un fichier Excel (.xlsx / .xls)
+              <input type="file" id="cep-excel-file" accept=".xlsx,.xls" style="display:none;" onchange="cepLireExcel(event)">
+            </label>
+            <div id="cep-excel-preview" style="margin-top:12px;font-size:12px;color:#555;"></div>
+          </div>
+
+          <!-- PANNEAU JSON -->
+          <div id="cep-panel-json" style="display:none;">
+            <div style="background:#fff3e0;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;">
+              <b>Fichier JSON de liste candidats</b><br>
+              <span style="font-size:12px;color:#555;">Sélectionnez un fichier JSON exporté précédemment depuis cet outil (liste ou données complètes avec notes).</span>
+            </div>
+            <label style="display:block;border:2px dashed #ffb74d;border-radius:8px;padding:30px;text-align:center;cursor:pointer;color:#e65100;font-size:14px;font-weight:bold;transition:background .2s;" onmouseover="this.style.background='#fff8e1'" onmouseout="this.style.background='#fff'">
+              📄 Cliquer pour choisir un fichier JSON
+              <input type="file" id="cep-json-liste-file" accept=".json" style="display:none;" onchange="cepLireJSON(event)">
+            </label>
+            <div id="cep-json-preview" style="margin-top:12px;font-size:12px;color:#555;"></div>
+          </div>
+
+          <!-- PANNEAU SAISIE MANUELLE -->
+          <div id="cep-panel-texte" style="display:none;">
+            <p style="font-size:13px;color:#555;margin-top:0;">Collez ou saisissez les données (copier-coller depuis Excel fonctionne) :<br>
+            <code style="background:#f5f5f5;padding:3px 8px;border-radius:4px;font-size:12px;">N°Table [TAB] Nom et Prénoms [TAB] Sexe [TAB] École</code></p>
+            <textarea id="cep-liste-input" rows="12" style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;padding:10px;border:1px solid #ccc;border-radius:6px;resize:vertical;" placeholder="001&#9;AÏKPON Joëlle Flourice&#9;F&#9;EPP AVRANKOU-CENTRE&#10;002&#9;AKPOVI Médard&#9;M&#9;CS SAINT-JOSEPH&#10;..."></textarea>
+          </div>
+
+          <div id="cep-import-preview" style="font-size:13px;margin:10px 0;"></div>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button onclick="cepValiderImport()" style="background:var(--bleu);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;flex:1;">✅ Valider et importer</button>
+            <button onclick="document.getElementById('cep-modal').style.display='none'" style="background:#ccc;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Annuler</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU DE SAISIE DES NOTES -->
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:20px;">
+        <div style="background:var(--bleu);color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">📝 SAISIE DES NOTES — CEP BLANC <span id="cep-titre-annee" style="opacity:.8;font-size:13px;"></span></div>
+        <div style="overflow-x:auto;">
+          <table id="cep-main-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
+            <thead>
+              <tr style="background:#1565c0;color:#fff;">
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:55px;">N° Table</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;text-align:left;min-width:200px;">NOM ET PRÉNOMS</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:45px;">SEXE</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;text-align:left;min-width:160px;">ÉCOLE</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">C.E</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">E.E</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">EST</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">ES</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">MATHS</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">DICTÉE</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:68px;">EA/VIVANT</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:82px;">COUTURE/<br>DESSIN</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:52px;">EPS</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:58px;background:#0d47a1;">TOTAL</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:55px;background:#0d47a1;">MOY.</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;min-width:80px;">SEUIL</th>
+                <th style="padding:8px 6px;border:1px solid #90caf9;width:45px;background:#0d47a1;">RANG</th>
+              </tr>
+            </thead>
+            <tbody id="cep-table-body">
+              <tr><td colspan="14" style="text-align:center;padding:30px;color:#999;font-style:italic;">Aucun candidat. Importez la liste via le bouton ci-dessus.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABLEAUX DE SYNTHÈSE -->
+      <div id="cep-syntheses" style="display:none;">
+
+        <!-- TABLEAU 1 : PARTICIPATION & RÉUSSITE -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#00838f;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">1. PARTICIPATION &amp; RÉUSSITE AU SEUIL (CENTRE)</div>
+          <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#00bcd4;color:#fff;">
+              <th style="padding:7px 10px;border:1px solid #b2ebf2;">CATÉGORIE</th>
+              <th style="padding:7px;border:1px solid #b2ebf2;">G</th><th style="padding:7px;border:1px solid #b2ebf2;">F</th><th style="padding:7px;border:1px solid #b2ebf2;font-weight:bold;">TOTAL</th>
+              <th style="padding:7px;border:1px solid #b2ebf2;">% G</th><th style="padding:7px;border:1px solid #b2ebf2;">% F</th><th style="padding:7px;border:1px solid #b2ebf2;font-weight:bold;">% T</th>
+            </tr></thead>
+            <tbody id="cep-synth1"></tbody>
+          </table></div>
+        </div>
+
+        <!-- TABLEAU 2 : RÉUSSITE PAR MATIÈRE -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#00838f;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">2. RÉUSSITE PAR MATIÈRE (CENTRE)</div>
+          <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:#00bcd4;color:#fff;">
+                <th rowspan="2" style="padding:7px;border:1px solid #b2ebf2;">MATIÈRE</th>
+                <th colspan="6" style="padding:7px;border:1px solid #b2ebf2;">INSCRITS</th>
+                <th colspan="6" style="padding:7px;border:1px solid #b2ebf2;background:#0097a7;">ONT ATTEINT LE SEUIL (≥ 10)</th>
+                <th colspan="6" style="padding:7px;border:1px solid #b2ebf2;background:#00695c;">N'ONT PAS ATTEINT (&lt; 10)</th>
+              </tr>
+              <tr style="background:#e0f7fa;color:#00838f;font-size:10px;">
+                <th style="padding:5px;border:1px solid #b2ebf2;">G</th><th style="padding:5px;border:1px solid #b2ebf2;">F</th><th style="padding:5px;border:1px solid #b2ebf2;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;">%G</th><th style="padding:5px;border:1px solid #b2ebf2;">%F</th><th style="padding:5px;border:1px solid #b2ebf2;">%T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">%G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">%F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">%T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">%G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">%F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">%T</th>
+              </tr>
+            </thead>
+            <tbody id="cep-synth2"></tbody>
+          </table></div>
+        </div>
+
+        <!-- TABLEAU 3 : STATS PAR ÉCOLE -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#00838f;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">3. STATISTIQUES GLOBALES PAR ÉCOLE</div>
+          <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:#00bcd4;color:#fff;">
+                <th rowspan="2" style="padding:7px;border:1px solid #b2ebf2;min-width:170px;text-align:left;">ÉCOLES DU CENTRE</th>
+                <th colspan="3" style="padding:7px;border:1px solid #b2ebf2;">INSCRITS</th>
+                <th colspan="3" style="padding:7px;border:1px solid #b2ebf2;">ONT COMPOSÉ</th>
+                <th colspan="3" style="padding:7px;border:1px solid #b2ebf2;background:#0097a7;">SEUIL ATTEINT</th>
+                <th colspan="3" style="padding:7px;border:1px solid #b2ebf2;background:#00695c;">SEUIL NON ATTEINT</th>
+                <th colspan="3" style="padding:7px;border:1px solid #b2ebf2;background:#1b5e20;">% RÉUSSITE</th>
+              </tr>
+              <tr style="background:#e0f7fa;color:#00838f;font-size:10px;">
+                <th style="padding:5px;border:1px solid #b2ebf2;">G</th><th style="padding:5px;border:1px solid #b2ebf2;">F</th><th style="padding:5px;border:1px solid #b2ebf2;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;">G</th><th style="padding:5px;border:1px solid #b2ebf2;">F</th><th style="padding:5px;border:1px solid #b2ebf2;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#2e7d32;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#ffebee;color:#c62828;">T</th>
+                <th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#1b5e20;">G</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#1b5e20;">F</th><th style="padding:5px;border:1px solid #b2ebf2;background:#e8f5e9;color:#1b5e20;">T</th>
+              </tr>
+            </thead>
+            <tbody id="cep-synth3"></tbody>
+          </table></div>
+        </div>
+
+        <!-- TABLEAU 4A : MATIÈRES PAR ÉCOLE PARTIE 1 -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#00838f;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">4.A RÉUSSITE PAR MATIÈRE ET PAR ÉCOLE — PARTIE 1 (C.E · E.E · EST · ES · MATHS)</div>
+          <div style="overflow-x:auto;"><table id="cep-synth4a-table" style="width:100%;border-collapse:collapse;font-size:10px;">
+            <thead id="cep-synth4a-head"></thead>
+            <tbody id="cep-synth4a"></tbody>
+          </table></div>
+        </div>
+
+        <!-- TABLEAU 4B : MATIÈRES PAR ÉCOLE PARTIE 2 -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#00838f;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">4.B RÉUSSITE PAR MATIÈRE ET PAR ÉCOLE — PARTIE 2 (DICTÉE · EA/VIVANT · COUTURE · EPS)</div>
+          <div style="overflow-x:auto;"><table id="cep-synth4b-table" style="width:100%;border-collapse:collapse;font-size:10px;">
+            <thead id="cep-synth4b-head"></thead>
+            <tbody id="cep-synth4b"></tbody>
+          </table></div>
+        </div>
+
+        <!-- ANALYSE PSYCHOPÉDAGOGIQUE -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+          <div style="background:linear-gradient(135deg,#4a148c,#7b1fa2);color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;">🧠 ANALYSE PSYCHOPÉDAGOGIQUE DES RÉSULTATS</div>
+          <div style="padding:18px;" id="cep-analyse-content">
+            <div style="color:#999;font-style:italic;text-align:center;padding:20px;">Saisissez des notes pour générer l'analyse automatique.</div>
+          </div>
+          <div style="padding:10px 18px 16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="cepGenererAnalyse()" style="background:#7b1fa2;color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">🔄 Générer / Actualiser l'analyse</button>
+            <button onclick="cepTelechargePDF2(this)" style="background:#0d47a1;color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">⬇ Télécharger en PDF</button>
+          </div>
+        </div>
+
+        <!-- SECTION SIGNATURE -->
+        <div style="display:flex;justify-content:space-between;margin-top:30px;padding:0 40px;" id="cep-signature-section">
+          <div style="text-align:center;font-size:13px;">
+            <p id="cep-sig-left" style="font-weight:bold;"></p>
+          </div>
+          <div style="text-align:center;font-size:13px;">
+            <p id="cep-sig-date"></p>
+            <p style="font-weight:bold;">Le Chef Centre</p>
+            <p id="cep-sig-chef" style="font-weight:bold;text-decoration:underline;"></p>
+          </div>
+        </div>
+
+      </div><!-- fin syntheses -->
+    </div>
+  </div><!-- fin tab-cep -->
+
 </div>
 
 <footer class="app-footer">
@@ -1377,9 +1647,73 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 // ═══════════════════════════════════════
 //  CONFIGURATION
 // ═══════════════════════════════════════
-const MATIERES = ['Lecture','E.E','ES','EST','Maths','Dictée','EA/Vivant','EA/Plastique','EPS'];
+const TOUTES_MATIERES = ['Lecture','C.O','Anglais','E.E','ES','EST','Maths','Dictée','EA/Vivant','EA/Dessin','EA/Couture','EPS'];
+let MATIERES = ['Lecture','E.E','ES','EST','Maths','Dictée','EA/Vivant','EPS']; // Défaut, mis à jour dynamiquement
 let nbEleves = 71;
 let seuil = 10;
+let seuilMatNumerateur = null; // null = auto (Math.ceil(N/2)), sinon valeur saisie par l'utilisateur
+
+function getSeuilMat(nbMat) {
+  if (seuilMatNumerateur !== null && seuilMatNumerateur > 0 && seuilMatNumerateur <= nbMat) {
+    return seuilMatNumerateur;
+  }
+  return 6; // Seuil standard MEMP : 6 matières
+}
+
+function majBadgeSeuilMat() {
+  const n = getMatieresSelectionnees().length;
+  const num = (seuilMatNumerateur !== null && seuilMatNumerateur > 0) ? seuilMatNumerateur : 6;
+  const badge = document.getElementById('seuil-mat-badge');
+  if (badge) badge.textContent = 'Seuil passage : ' + num + '/' + n + ' mat.';
+}
+
+function onSeuilMatChange() {
+  const val = parseInt(document.getElementById('seuil-mat-num').value);
+  const nbMat = getMatieresSelectionnees().length;
+  if (!val || isNaN(val) || val <= 0) {
+    seuilMatNumerateur = null;
+  } else {
+    seuilMatNumerateur = Math.min(val, nbMat);
+    document.getElementById('seuil-mat-num').value = seuilMatNumerateur;
+  }
+  majBadgeSeuilMat();
+}
+
+function getMatieresSelectionnees() {
+  return Array.from(document.querySelectorAll('.mat-chk:checked')).map(c => c.value);
+}
+
+function majBadgeMatieres() {
+  const n = getMatieresSelectionnees().length;
+  const badge = document.getElementById('nb-matieres-badge');
+  if (badge) badge.textContent = n + ' matière' + (n > 1 ? 's' : '') + ' sélectionnée' + (n > 1 ? 's' : '');
+  // Mettre à jour le label nb-mat-total
+  const nbMatTotal = document.getElementById('nb-mat-total');
+  if (nbMatTotal) nbMatTotal.textContent = n;
+  // Mettre à jour le max et le label du seuil de passage
+  const inp = document.getElementById('seuil-mat-num');
+  if (inp) {
+    inp.max = n;
+    inp.placeholder = '6 (standard)';
+    // Si la valeur saisie dépasse le nouveau max, on réinitialise
+    if (parseInt(inp.value) > n) inp.value = '';
+    if (parseInt(inp.value) > n) seuilMatNumerateur = null;
+  }
+  majBadgeSeuilMat();
+}
+
+function toutSelectionner(etat) {
+  document.querySelectorAll('.mat-chk').forEach(c => c.checked = etat);
+  majBadgeMatieres();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.mat-chk').forEach(c => c.addEventListener('change', majBadgeMatieres));
+  majBadgeMatieres();
+  // Initialiser le label nb-mat-total
+  const nbMatTotal = document.getElementById('nb-mat-total');
+  if (nbMatTotal) nbMatTotal.textContent = getMatieresSelectionnees().length;
+});
 
 // ═══════════════════════════════════════
 //  TABS
@@ -1471,28 +1805,40 @@ function buildTable() {
     return;
   }
   nbEleves = parseInt(nbInput) || 0;
-  if(nbEleves < 1) {
-    alert('Le nombre d\'élèves doit être au moins 1.');
-    return;
-  }
+  if(nbEleves < 1) { alert('Le nombre d\'élèves doit être au moins 1.'); return; }
+
+  MATIERES = getMatieresSelectionnees();
+  if (MATIERES.length === 0) { alert('Veuillez sélectionner au moins une matière.'); return; }
+
   seuil = parseFloat(document.getElementById('seuil').value) || 10;
+
+  // Reconstruire le thead dynamiquement
+  const thead = document.getElementById('main-thead');
+  let thHtml = '<tr><th>N°</th><th style="min-width:160px;text-align:left;padding-left:10px;">Nom et prénoms</th><th>Sexe</th>';
+  MATIERES.forEach(m => { thHtml += '<th>' + m + '</th>'; });
+  thHtml += '<th>Total</th><th>Moy./20</th><th>Mat.≥' + seuil + '</th><th>Seuil<br><small style="font-size:10px;font-weight:normal;opacity:.8;">' + getSeuilMat(MATIERES.length) + '/' + MATIERES.length + '</small></th><th>Rang</th></tr>';
+  thead.innerHTML = thHtml;
+
   const tbody = document.getElementById('table-body');
   tbody.innerHTML = '';
+  const nbMat = MATIERES.length;
+  const seuilMat = getSeuilMat(nbMat); // Seuil = personnalisé ou ≥ 50% des matières
 
   for (let i = 1; i <= nbEleves; i++) {
     const tr = document.createElement('tr');
     tr.setAttribute('data-row', i);
-    let cells = `<td>${i}</td>`;
-    cells += `<td class="nom-cell"><input type="text" placeholder="Nom Prénom" onchange="recalcAll()"></td>`;
-    cells += `<td><select class="sexe-sel" onchange="recalcAll()"><option value="">-</option><option value="G">G</option><option value="F">F</option></select></td>`;
-    for (let m = 0; m < 9; m++) {
-      cells += `<td><input type="number" min="0" max="20" step="0.25" placeholder="—" oninput="recalcRow(${i})"></td>`;
+    tr.setAttribute('data-nb-mat', nbMat);
+    let cells = '<td>' + i + '</td>';
+    cells += '<td class="nom-cell"><input type="text" placeholder="Nom Prénom" onchange="recalcAll()"></td>';
+    cells += '<td><select class="sexe-sel" onchange="recalcAll()"><option value="">-</option><option value="G">G</option><option value="F">F</option></select></td>';
+    for (let m = 0; m < nbMat; m++) {
+      cells += '<td><input type="number" min="0" max="20" step="0.25" placeholder="—" oninput="recalcRow(' + i + ')"></td>';
     }
-    cells += `<td class="total-cell" style="font-family:'JetBrains Mono',monospace;">—</td>`;
-    cells += `<td class="moy-cell">—</td>`;
-    cells += `<td style="font-family:'JetBrains Mono',monospace;">—</td>`;
-    cells += `<td class="seuil-cell">—</td>`;
-    cells += `<td style="font-family:'JetBrains Mono',monospace;font-size:11px;">—</td>`;
+    cells += '<td class="total-cell" style="font-family:\'JetBrains Mono\',monospace;">—</td>';
+    cells += '<td class="moy-cell">—</td>';
+    cells += '<td style="font-family:\'JetBrains Mono\',monospace;">—</td>';
+    cells += '<td class="seuil-cell">—</td>';
+    cells += '<td style="font-family:\'JetBrains Mono\',monospace;font-size:11px;">—</td>';
     tr.innerHTML = cells;
     tbody.appendChild(tr);
   }
@@ -1541,6 +1887,8 @@ function recalcRow(rowNum) {
   const matCell = cells[cells.length - 3];
   const seuilCell = cells[cells.length - 2];
   const rangCell = cells[cells.length - 1];
+  const nbMat = parseInt(row.getAttribute('data-nb-mat')) || MATIERES.length || 9;
+  const seuilMat = getSeuilMat(nbMat);
 
   if (!hasAny) {
     totalCell.textContent = '—';
@@ -1554,14 +1902,14 @@ function recalcRow(rowNum) {
 
   const validNotes = notes.filter(n => n !== null);
   const total = validNotes.reduce((a,b) => a+b, 0);
-  const moy = (total / 9).toFixed(2);
+  const moy = (total / nbMat).toFixed(2);
   const matSup = validNotes.filter(n => n >= seuil).length;
-  const atteint = matSup >= 6;
+  const atteint = matSup >= seuilMat;
 
   totalCell.textContent = total.toFixed(2);
   moyCell.textContent = moy;
   moyCell.className = 'moy-cell ' + (parseFloat(moy) >= 15 ? 'moy-excellent' : parseFloat(moy) >= seuil ? 'moy-moyen' : 'moy-faible');
-  matCell.textContent = matSup + '/9';
+  matCell.textContent = matSup + '/' + nbMat;
   seuilCell.textContent = atteint ? 'OUI' : 'NON';
   seuilCell.className = 'seuil-cell ' + (atteint ? 'seuil-oui' : 'seuil-non');
 
@@ -2218,6 +2566,7 @@ function saveLocal() {
     admin: document.getElementById('admin').value,
     directeur: document.getElementById('directeur').value,
     seuil: document.getElementById('seuil').value,
+    seuilMatNum: seuilMatNumerateur,
     nbEleves: document.getElementById('nb-eleves').value,
     eleves: []
   };
@@ -2260,6 +2609,11 @@ function loadLocal() {
         document.getElementById('admin').value = data.admin || '';
         document.getElementById('directeur').value = data.directeur || '';
         document.getElementById('seuil').value = data.seuil || 10;
+        if (data.seuilMatNum != null) {
+          seuilMatNumerateur = data.seuilMatNum;
+          const inp = document.getElementById('seuil-mat-num');
+          if (inp) inp.value = seuilMatNumerateur;
+        }
         document.getElementById('nb-eleves').value = data.nbEleves || 71;
         updateHeader();
         buildTable();
@@ -2348,6 +2702,7 @@ function getStudentStats(eleve, seuilGlobal) {
   let validNotesCount = 0;
   let matSup = 0;
   let total = 0;
+  const nbMat = eleve.notes.length || MATIERES.length || 9;
   eleve.notes.forEach(n => {
     if (n !== null && n !== '') {
       let val = parseFloat(n);
@@ -2357,9 +2712,10 @@ function getStudentStats(eleve, seuilGlobal) {
     }
   });
   if (validNotesCount === 0) return { moy: 0, seuil: '—' };
+  const seuilPassage = getSeuilMat(nbMat);
   return {
-    moy: (total / 9),
-    seuil: matSup >= 6 ? 'OUI' : 'NON'
+    moy: (total / nbMat),
+    seuil: matSup >= seuilPassage ? 'OUI' : 'NON'
   };
 }
 
@@ -2937,6 +3293,1476 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  ONGLET 5 — EXAMEN BLANC CEP
+// ═══════════════════════════════════════════════════════════════
+
+const CEP_MATIERES = ['CE', 'EE', 'EST', 'ES', 'MATHS', 'DICTEE', 'EAVIVANT', 'COUTDESSIN', 'EPS'];
+const CEP_MAT_LABELS = {'CE':'C.E','EE':'E.E','EST':'EST','ES':'ES','MATHS':'MATHS','DICTEE':'DICTÉE','EAVIVANT':'EA/VIVANT','COUTDESSIN':'COUTURE/DESSIN','EPS':'EPS'};
+const CEP_MAT1 = ['CE','EE','EST','ES','MATHS'];
+const CEP_MAT2 = ['DICTEE','EAVIVANT','COUTDESSIN','EPS'];
+
+let cepStudents = [];
+let cepNotes = {};
+
+function cepFmtPct(v) {
+  if (!isFinite(v) || isNaN(v) || v === 0) return '0,00%';
+  return (Math.floor(v * 100) / 100).toFixed(2).replace('.', ',') + '%';
+}
+
+// Buffer pour données parsées avant validation
+let cepImportBuffer = []; // [{id, nom, sexe, ecole}]
+let cepImportMode = 'excel'; // 'excel' | 'json' | 'texte'
+
+function cepImportListeModal() {
+  cepImportBuffer = [];
+  cepImportMode = 'excel';
+  document.getElementById('cep-modal').style.display = 'flex';
+  document.getElementById('cep-import-preview').textContent = '';
+  document.getElementById('cep-excel-preview').textContent = '';
+  document.getElementById('cep-json-preview').textContent = '';
+  const li = document.getElementById('cep-liste-input');
+  if (li) li.value = '';
+  const ef = document.getElementById('cep-excel-file');
+  if (ef) ef.value = '';
+  const jf = document.getElementById('cep-json-liste-file');
+  if (jf) jf.value = '';
+  cepModalTab('excel');
+}
+
+function cepModalTab(tab) {
+  cepImportMode = tab;
+  ['excel','json','texte'].forEach(function(t) {
+    const btn = document.getElementById('cep-tab-' + t);
+    const panel = document.getElementById('cep-panel-' + t);
+    if (btn) { btn.style.borderBottomColor = t === tab ? 'var(--bleu)' : 'transparent'; btn.style.color = t === tab ? 'var(--bleu)' : '#999'; }
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function cepLireExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const prev = document.getElementById('cep-excel-preview');
+  prev.innerHTML = '<span style="color:#888;">⏳ Lecture du fichier en cours...</span>';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      let parsed = [], skipped = 0;
+      rows.forEach(function(row, i) {
+        if (!row || row.length < 4) { skipped++; return; }
+        const col0 = String(row[0]).trim();
+        const col1 = String(row[1]).trim();
+        const col2 = String(row[2]).trim().toUpperCase();
+        const col3 = String(row[3]).trim();
+        // Ignorer si col0 vide ou col1 vide ou ressemble à un en-tête non numérique
+        if (!col0 || !col1 || col1.toLowerCase().includes('nom')) { skipped++; return; }
+        const sexe = col2 === 'F' ? 'F' : 'M';
+        parsed.push({ id: col0, nom: col1, sexe: sexe, ecole: col3 });
+      });
+      cepImportBuffer = parsed;
+      if (parsed.length > 0) {
+        prev.innerHTML = '<span style="color:#2e7d32;font-weight:bold;">✅ ' + parsed.length + ' candidat(s) détecté(s)' + (skipped > 0 ? ' · ' + skipped + ' ligne(s) ignorée(s)' : '') + '</span>' +
+          '<br><span style="color:#555;font-size:11px;">Aperçu : ' + parsed.slice(0,3).map(function(s){ return s.id + ' — ' + s.nom + ' (' + s.sexe + ') — ' + s.ecole; }).join(' | ') + (parsed.length > 3 ? ' ...' : '') + '</span>';
+        document.getElementById('cep-import-preview').innerHTML = '<span style="color:#2e7d32;font-weight:bold;">✅ Prêt à importer ' + parsed.length + ' candidat(s). Cliquez sur "Valider".</span>';
+      } else {
+        prev.innerHTML = '<span style="color:#c62828;">⚠️ Aucun candidat valide trouvé. Vérifiez que les colonnes A-B-C-D sont renseignées.</span>';
+        cepImportBuffer = [];
+      }
+    } catch(err) {
+      document.getElementById('cep-excel-preview').innerHTML = '<span style="color:#c62828;">⚠️ Erreur de lecture : ' + err.message + '</span>';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function cepLireJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const prev = document.getElementById('cep-json-preview');
+  prev.innerHTML = '<span style="color:#888;">⏳ Lecture du fichier JSON...</span>';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      let parsed = [];
+      // Format liste brute [{id, nom, sexe, ecole}]
+      if (Array.isArray(data)) {
+        parsed = data.filter(function(r){ return r.nom || r.name; }).map(function(r){
+          return { id: r.id || '', nom: r.nom || r.name || '', sexe: (r.sexe || r.sex || 'M').toUpperCase() === 'F' ? 'F' : 'M', ecole: r.ecole || r.school || '' };
+        });
+      }
+      // Format sauvegarde complète {students:[], notes:{}}
+      else if (data.students && Array.isArray(data.students)) {
+        parsed = data.students.map(function(r){
+          return { id: r.id || '', nom: r.nom || r.name || '', sexe: (r.sexe || r.sex || 'M').toUpperCase() === 'F' ? 'F' : 'M', ecole: r.ecole || '' };
+        });
+      }
+      cepImportBuffer = parsed;
+      if (parsed.length > 0) {
+        prev.innerHTML = '<span style="color:#2e7d32;font-weight:bold;">✅ ' + parsed.length + ' candidat(s) trouvé(s) dans le fichier JSON.</span><br>' +
+          '<span style="color:#555;font-size:11px;">Aperçu : ' + parsed.slice(0,3).map(function(s){ return s.id + ' — ' + s.nom + ' (' + s.sexe + ')'; }).join(' | ') + (parsed.length > 3 ? ' ...' : '') + '</span>';
+        document.getElementById('cep-import-preview').innerHTML = '<span style="color:#2e7d32;font-weight:bold;">✅ Prêt à importer ' + parsed.length + ' candidat(s). Cliquez sur "Valider".</span>';
+      } else {
+        prev.innerHTML = '<span style="color:#c62828;">⚠️ Aucun candidat valide trouvé dans ce fichier JSON.</span>';
+      }
+    } catch(err) {
+      prev.innerHTML = '<span style="color:#c62828;">⚠️ Fichier JSON invalide : ' + err.message + '</span>';
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function cepValiderImport() {
+  let parsed = [];
+
+  if (cepImportMode === 'texte') {
+    // Saisie manuelle
+    const raw = document.getElementById('cep-liste-input').value.trim();
+    if (!raw) { alert('Aucune donnée saisie.'); return; }
+    const lines = raw.split('\n').filter(function(l){ return l.trim(); });
+    let errors = [];
+    lines.forEach(function(line, i) {
+      const parts = line.split(/\t|;/).map(function(p){ return p.trim(); });
+      if (parts.length < 4) { errors.push('Ligne ' + (i+1) + ' ignorée'); return; }
+      const sexe = parts[2].toUpperCase() === 'F' ? 'F' : 'M';
+      if (!parts[1]) { errors.push('Ligne ' + (i+1) + ' : nom vide'); return; }
+      parsed.push({ id: parts[0], nom: parts[1], sexe: sexe, ecole: parts.slice(3).join(' ').trim() });
+    });
+    if (parsed.length === 0) { alert('Aucun candidat valide.\n' + errors.join('\n')); return; }
+    if (errors.length > 0) {
+      if (!confirm(parsed.length + ' candidat(s) valides, ' + errors.length + ' ligne(s) ignorée(s). Continuer ?')) return;
+    }
+  } else {
+    // Excel ou JSON — déjà parsé dans cepImportBuffer
+    if (cepImportBuffer.length === 0) {
+      alert('⚠️ Aucun candidat chargé. Sélectionnez d\'abord un fichier valide.');
+      return;
+    }
+    parsed = cepImportBuffer;
+  }
+
+  // Merge avec les notes existantes
+  const oldNotes = Object.assign({}, cepNotes);
+  cepStudents = parsed;
+  cepNotes = {};
+  cepStudents.forEach(function(s) {
+    cepNotes[s.id] = oldNotes[s.id] || {};
+    CEP_MATIERES.forEach(function(m){ if (cepNotes[s.id][m] === undefined) cepNotes[s.id][m] = null; });
+    if (cepNotes[s.id].seuilAtteint === undefined) cepNotes[s.id].seuilAtteint = null;
+    if (cepNotes[s.id].aCompose === undefined) cepNotes[s.id].aCompose = false;
+  });
+  cepImportBuffer = [];
+  document.getElementById('cep-modal').style.display = 'none';
+  cepRenderTable();
+  cepUpdateSyntheses();
+}
+
+function cepRenderTable() {
+  const tbody = document.getElementById('cep-table-body');
+  if (cepStudents.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#999;font-style:italic;">Aucun candidat. Importez la liste via le bouton ci-dessus.</td></tr>';
+    document.getElementById('cep-nb-badge').textContent = '0 candidat(s)';
+    document.getElementById('cep-syntheses').style.display = 'none';
+    return;
+  }
+  let html = '';
+  cepStudents.forEach((s, idx) => {
+    const bg = idx % 2 === 0 ? '#fff' : '#f9fbff';
+    let inputs = '';
+    CEP_MATIERES.forEach(m => {
+      const v = cepNotes[s.id][m];
+      const vStr = v !== null ? v : '';
+      let sty = 'width:46px;padding:3px;text-align:center;border:1px solid #bbb;border-radius:3px;font-size:12px;';
+      if (v !== null) sty += v < 10 ? 'background:#ffebee;color:#c62828;font-weight:bold;' : 'background:#e8f5e9;color:#1b5e20;font-weight:bold;';
+      inputs += '<td style="padding:3px;border:1px solid #e3e8f0;"><input type="number" min="0" max="20" step="0.25" value="' + vStr + '" style="' + sty + '" data-id="' + s.id + '" data-mat="' + m + '" oninput="cepUpdateNote(this)"></td>';
+    });
+    const sxColor = s.sexe === 'F' ? '#e91e63' : '#1565c0';
+    html += '<tr style="background:' + bg + '">' +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;color:var(--bleu);">' + s.id + '</td>' +
+      '<td style="padding:5px;border:1px solid #e3e8f0;font-weight:500;">' + s.nom + '</td>' +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;color:' + sxColor + ';">' + s.sexe + '</td>' +
+      '<td style="padding:5px;border:1px solid #e3e8f0;font-size:11px;">' + s.ecole + '</td>' +
+      inputs +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;background:#e8eaf6;" id="cep-total-' + s.id + '">—</td>' +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;background:#e8eaf6;" id="cep-moy-' + s.id + '">—</td>' +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;font-size:11px;" id="cep-seuil-' + s.id + '">—</td>' +
+      '<td style="text-align:center;padding:5px;border:1px solid #e3e8f0;font-weight:bold;background:#e8eaf6;color:var(--bleu);" id="cep-rang-' + s.id + '">—</td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+  document.getElementById('cep-nb-badge').textContent = cepStudents.length + ' candidat(s)';
+  document.getElementById('cep-syntheses').style.display = 'block';
+  cepStudents.forEach(s => cepEvalSeuil(s.id));
+  cepRecalcRangs();
+  cepSyncSignatures();
+}
+
+function cepUpdateNote(input) {
+  const id = input.dataset.id;
+  const mat = input.dataset.mat;
+  let base = 'width:46px;padding:3px;text-align:center;border-radius:3px;font-size:12px;';
+  if (input.value === '') {
+    cepNotes[id][mat] = null;
+    input.style.cssText = base + 'border:1px solid #bbb;';
+  } else {
+    let n = parseFloat(input.value);
+    if (n > 20) { n = 20; input.value = 20; }
+    if (n < 0)  { n = 0;  input.value = 0; }
+    cepNotes[id][mat] = n;
+    input.style.cssText = base + (n < 10 ? 'border:1px solid #f44336;background:#ffebee;color:#c62828;font-weight:bold;' : 'border:1px solid #4caf50;background:#e8f5e9;color:#1b5e20;font-weight:bold;');
+  }
+  cepEvalSeuil(id);
+  cepRecalcRangs();
+  cepUpdateSyntheses();
+}
+
+function cepEvalSeuil(id) {
+  let count10 = 0, composed = 0, total = 0;
+  CEP_MATIERES.forEach(m => {
+    const n = cepNotes[id][m];
+    if (n !== null) { composed++; total += n; if (n >= 10) count10++; }
+  });
+  const cell = document.getElementById('cep-seuil-' + id);
+  const totalCell = document.getElementById('cep-total-' + id);
+  const moyCell = document.getElementById('cep-moy-' + id);
+  if (!cell) return;
+  if (composed > 0) {
+    cepNotes[id].aCompose = true;
+    cepNotes[id].seuilAtteint = count10 >= 6;
+    cepNotes[id]._total = total;
+    cepNotes[id]._moy = total / 9;
+    if (totalCell) totalCell.textContent = total.toFixed(2);
+    if (moyCell) {
+      const moy = total / 9;
+      moyCell.textContent = moy.toFixed(2);
+      moyCell.style.color = moy >= 15 ? '#1b5e20' : moy >= 10 ? '#1565c0' : '#c62828';
+    }
+    cell.innerHTML = count10 >= 6
+      ? '<span style="color:#2e7d32;font-weight:bold;">OUI ' + count10 + '/9</span>'
+      : '<span style="color:#c62828;font-weight:bold;">NON ' + count10 + '/9</span>';
+  } else {
+    cepNotes[id].aCompose = false;
+    cepNotes[id].seuilAtteint = null;
+    cepNotes[id]._total = null;
+    cepNotes[id]._moy = null;
+    if (totalCell) totalCell.textContent = '—';
+    if (moyCell) moyCell.textContent = '—';
+    cell.innerHTML = '—';
+  }
+}
+
+function cepRecalcRangs() {
+  if (!cepStudents || cepStudents.length === 0) return;
+
+  var data = [];
+  cepStudents.forEach(function(s) {
+    var n = cepNotes[s.id];
+    var hasCompose = n && n.aCompose === true;
+
+    if (!hasCompose) {
+      data.push({ id: s.id, moy: -1, matSup: -1, compose: false });
+      return;
+    }
+
+    // Nombre de matières >= 10
+    var matSup = 0;
+    CEP_MATIERES.forEach(function(m) {
+      if (n[m] !== null && n[m] !== undefined && n[m] >= 10) matSup++;
+    });
+
+    var moy = (n._moy !== null && n._moy !== undefined) ? n._moy : 0;
+    data.push({ id: s.id, moy: moy, matSup: matSup, compose: true });
+  });
+
+  var composants = data.filter(function(d){ return d.compose; });
+  var absents    = data.filter(function(d){ return !d.compose; });
+
+  // Tri : matières réussies décroissant, puis moyenne décroissante
+  composants.sort(function(a, b) {
+    if (b.matSup !== a.matSup) return b.matSup - a.matSup;
+    return b.moy - a.moy;
+  });
+
+  // Attribution des rangs avec partage si égalité stricte
+  var rangActuel = 1;
+  composants.forEach(function(d, i) {
+    if (i > 0) {
+      var prev = composants[i - 1];
+      if (d.moy !== prev.moy || d.matSup !== prev.matSup) {
+        rangActuel = i + 1;
+      }
+    }
+    // Attribution du rang dans la cellule
+    var cell = document.getElementById('cep-rang-' + d.id);
+    if (cell) {
+      cell.textContent = rangActuel + (rangActuel === 1 ? 'er' : 'e');
+      cell.style.color = '#1565c0';
+    }
+    if (cepNotes[d.id]) cepNotes[d.id]._rang = rangActuel;
+  });
+
+  // Absents → tiret
+  absents.forEach(function(d) {
+    var cell = document.getElementById('cep-rang-' + d.id);
+    if (cell) { cell.textContent = '—'; cell.style.color = '#999'; }
+  });
+}
+
+function cepUpdateSyntheses() {
+  if (cepStudents.length === 0) return;
+  const centre = { inscrits:{M:0,F:0}, composes:{M:0,F:0}, oui:{M:0,F:0}, non:{M:0,F:0} };
+  const matC = {};
+  CEP_MATIERES.forEach(m => matC[m] = {cM:0,cF:0,rM:0,rF:0});
+  const ecoles = {};
+
+  cepStudents.forEach(s => {
+    const sx = s.sexe, ec = s.ecole;
+    centre.inscrits[sx]++;
+    if (!ecoles[ec]) {
+      ecoles[ec] = { inscrits:{M:0,F:0}, composes:{M:0,F:0}, oui:{M:0,F:0}, non:{M:0,F:0}, mr:{}, mc:{} };
+      CEP_MATIERES.forEach(m => { ecoles[ec].mr[m]={M:0,F:0}; ecoles[ec].mc[m]={M:0,F:0}; });
+    }
+    ecoles[ec].inscrits[sx]++;
+    if (cepNotes[s.id].aCompose) {
+      centre.composes[sx]++; ecoles[ec].composes[sx]++;
+      if (cepNotes[s.id].seuilAtteint) { centre.oui[sx]++; ecoles[ec].oui[sx]++; }
+      else { centre.non[sx]++; ecoles[ec].non[sx]++; }
+    }
+    CEP_MATIERES.forEach(m => {
+      const n = cepNotes[s.id][m];
+      if (n !== null) {
+        matC[m]['c'+sx]++; ecoles[ec].mc[m][sx]++;
+        if (n >= 10) { matC[m]['r'+sx]++; ecoles[ec].mr[m][sx]++; }
+      }
+    });
+  });
+
+  const tI = centre.inscrits.M+centre.inscrits.F;
+  const tC = centre.composes.M+centre.composes.F;
+  const tO = centre.oui.M+centre.oui.F;
+  const tN = centre.non.M+centre.non.F;
+  const p = cepFmtPct;
+  const B = 'border:1px solid #e0e0e0;';
+  const bc = 'border:1px solid #b2ebf2;';
+
+  // T1
+  document.getElementById('cep-synth1').innerHTML =
+    '<tr style="background:#f5f5f5;"><td style="padding:6px 10px;'+B+'">Inscrits</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+centre.inscrits.M+'</td><td style="padding:6px;'+B+'text-align:center;">'+centre.inscrits.F+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+tI+'</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+p(tI?centre.inscrits.M/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;">'+p(tI?centre.inscrits.F/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">100,00%</td></tr>' +
+    '<tr><td style="padding:6px 10px;'+B+'">Ont composé</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+centre.composes.M+'</td><td style="padding:6px;'+B+'text-align:center;">'+centre.composes.F+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+tC+'</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+p(tI?centre.composes.M/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;">'+p(tI?centre.composes.F/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+p(tI?tC/tI*100:0)+'</td></tr>' +
+    '<tr style="background:#e8f5e9;"><td style="padding:6px 10px;'+B+'color:#1b5e20;font-weight:bold;">Ont atteint le seuil</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+centre.oui.M+'</td><td style="padding:6px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+centre.oui.F+'</td><td style="padding:6px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+tO+'</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+p(centre.composes.M?centre.oui.M/centre.composes.M*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;">'+p(centre.composes.F?centre.oui.F/centre.composes.F*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+p(tC?tO/tC*100:0)+'</td></tr>' +
+    '<tr style="background:#ffebee;"><td style="padding:6px 10px;'+B+'color:#b71c1c;font-weight:bold;">N\'ont pas atteint le seuil</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+centre.non.M+'</td><td style="padding:6px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+centre.non.F+'</td><td style="padding:6px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+tN+'</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+p(centre.composes.M?centre.non.M/centre.composes.M*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;">'+p(centre.composes.F?centre.non.F/centre.composes.F*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+p(tC?tN/tC*100:0)+'</td></tr>' +
+    '<tr style="background:#fce4ec;"><td style="padding:6px 10px;'+B+'color:#880e4f;font-weight:bold;">N\'ont pas composé (Absents)</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;color:#880e4f;font-weight:bold;">'+(centre.inscrits.M-centre.composes.M)+'</td><td style="padding:6px;'+B+'text-align:center;color:#880e4f;font-weight:bold;">'+(centre.inscrits.F-centre.composes.F)+'</td><td style="padding:6px;'+B+'text-align:center;color:#880e4f;font-weight:bold;">'+(tI-tC)+'</td>' +
+    '<td style="padding:6px;'+B+'text-align:center;">'+p(tI?(centre.inscrits.M-centre.composes.M)/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;">'+p(tI?(centre.inscrits.F-centre.composes.F)/tI*100:0)+'</td><td style="padding:6px;'+B+'text-align:center;font-weight:bold;">'+p(tI?(tI-tC)/tI*100:0)+'</td></tr>';
+
+  // T2
+  let h2 = '';
+  CEP_MATIERES.forEach(m => {
+    const s = matC[m];
+    const cT=s.cM+s.cF, rT=s.rM+s.rF, ecM=s.cM-s.rM, ecF=s.cF-s.rF, ecT=cT-rT;
+    h2 += '<tr><td style="padding:5px 8px;'+B+'text-align:left;font-weight:bold;">'+CEP_MAT_LABELS[m]+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;">'+tI+'</td><td style="padding:5px;'+B+'text-align:center;">'+tI+'</td><td style="padding:5px;'+B+'text-align:center;font-weight:bold;">'+tI+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;">'+p(tI?centre.inscrits.M/tI*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;">'+p(tI?centre.inscrits.F/tI*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;font-weight:bold;">100,00%</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+s.rM+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+s.rF+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+rT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#2e7d32;">'+p(s.cM?s.rM/s.cM*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;">'+p(s.cF?s.rF/s.cF*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+p(cT?rT/cT*100:0)+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+ecM+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+ecF+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+ecT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#c62828;">'+p(s.cM?ecM/s.cM*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;">'+p(s.cF?ecF/s.cF*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+p(cT?ecT/cT*100:0)+'</td></tr>';
+  });
+  document.getElementById('cep-synth2').innerHTML = h2;
+
+  // T3
+  const ecolesKeys = Object.keys(ecoles).sort();
+  let h3 = '';
+  ecolesKeys.forEach(ec => {
+    const st = ecoles[ec];
+    const insT=st.inscrits.M+st.inscrits.F, compT=st.composes.M+st.composes.F, ouiT=st.oui.M+st.oui.F, nonT=st.non.M+st.non.F;
+    h3 += '<tr><td style="padding:5px 8px;'+B+'text-align:left;font-weight:bold;font-size:11px;">'+ec+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;">'+st.inscrits.M+'</td><td style="padding:5px;'+B+'text-align:center;">'+st.inscrits.F+'</td><td style="padding:5px;'+B+'text-align:center;font-weight:bold;">'+insT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;">'+st.composes.M+'</td><td style="padding:5px;'+B+'text-align:center;">'+st.composes.F+'</td><td style="padding:5px;'+B+'text-align:center;font-weight:bold;">'+compT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+st.oui.M+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+st.oui.F+'</td><td style="padding:5px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+ouiT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+st.non.M+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+st.non.F+'</td><td style="padding:5px;'+B+'text-align:center;color:#c62828;font-weight:bold;">'+nonT+'</td>' +
+      '<td style="padding:5px;'+B+'text-align:center;">'+p(st.composes.M?st.oui.M/st.composes.M*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;">'+p(st.composes.F?st.oui.F/st.composes.F*100:0)+'</td><td style="padding:5px;'+B+'text-align:center;font-weight:bold;">'+p(compT?ouiT/compT*100:0)+'</td></tr>';
+  });
+  h3 += '<tr style="background:#e0f7fa;font-weight:bold;"><td style="padding:5px 8px;'+bc+'text-align:left;">TOTAL CENTRE</td>' +
+    '<td style="padding:5px;'+bc+'text-align:center;">'+centre.inscrits.M+'</td><td style="padding:5px;'+bc+'text-align:center;">'+centre.inscrits.F+'</td><td style="padding:5px;'+bc+'text-align:center;">'+tI+'</td>' +
+    '<td style="padding:5px;'+bc+'text-align:center;">'+centre.composes.M+'</td><td style="padding:5px;'+bc+'text-align:center;">'+centre.composes.F+'</td><td style="padding:5px;'+bc+'text-align:center;">'+tC+'</td>' +
+    '<td style="padding:5px;'+bc+'text-align:center;color:#2e7d32;">'+centre.oui.M+'</td><td style="padding:5px;'+bc+'text-align:center;color:#2e7d32;">'+centre.oui.F+'</td><td style="padding:5px;'+bc+'text-align:center;color:#2e7d32;">'+tO+'</td>' +
+    '<td style="padding:5px;'+bc+'text-align:center;color:#c62828;">'+centre.non.M+'</td><td style="padding:5px;'+bc+'text-align:center;color:#c62828;">'+centre.non.F+'</td><td style="padding:5px;'+bc+'text-align:center;color:#c62828;">'+tN+'</td>' +
+    '<td style="padding:5px;'+bc+'text-align:center;">'+p(centre.composes.M?centre.oui.M/centre.composes.M*100:0)+'</td><td style="padding:5px;'+bc+'text-align:center;">'+p(centre.composes.F?centre.oui.F/centre.composes.F*100:0)+'</td><td style="padding:5px;'+bc+'text-align:center;">'+p(tC?tO/tC*100:0)+'</td></tr>';
+  document.getElementById('cep-synth3').innerHTML = h3;
+
+  // T4A & T4B
+  function buildHead(mats) {
+    let r1='<tr style="background:#00bcd4;color:#fff;"><th rowspan="2" style="padding:7px;'+bc+'text-align:left;min-width:160px;">ÉCOLE</th>';
+    let r2='<tr style="background:#e0f7fa;color:#00838f;font-size:10px;">';
+    mats.forEach(m => {
+      r1 += '<th colspan="6" style="padding:5px;'+bc+'">'+CEP_MAT_LABELS[m]+'</th>';
+      ['G','F','T','%G','%F','%T'].forEach(h => r2 += '<th style="padding:4px;'+bc+'">'+h+'</th>');
+    });
+    return r1+'</tr>'+r2+'</tr>';
+  }
+  document.getElementById('cep-synth4a-head').innerHTML = buildHead(CEP_MAT1);
+  document.getElementById('cep-synth4b-head').innerHTML = buildHead(CEP_MAT2);
+
+  function buildRows(mats) {
+    let html = '';
+    ecolesKeys.forEach(ec => {
+      const st = ecoles[ec];
+      html += '<tr><td style="padding:5px 8px;'+B+'text-align:left;font-weight:bold;font-size:10px;">'+ec+'</td>';
+      mats.forEach(m => {
+        const rM=st.mr[m].M,rF=st.mr[m].F,rT=rM+rF,cM=st.mc[m].M,cF=st.mc[m].F,cT=cM+cF;
+        html += '<td style="padding:4px;'+B+'text-align:center;">'+rM+'</td><td style="padding:4px;'+B+'text-align:center;">'+rF+'</td><td style="padding:4px;'+B+'text-align:center;font-weight:bold;">'+rT+'</td>' +
+          '<td style="padding:4px;'+B+'text-align:center;color:#555;">'+p(cM?rM/cM*100:0)+'</td><td style="padding:4px;'+B+'text-align:center;color:#555;">'+p(cF?rF/cF*100:0)+'</td><td style="padding:4px;'+B+'text-align:center;color:#555;font-weight:bold;">'+p(cT?rT/cT*100:0)+'</td>';
+      });
+      html += '</tr>';
+    });
+    html += '<tr style="background:#e8f5e9;font-weight:bold;"><td style="padding:5px 8px;border:1px solid #c8e6c9;text-align:left;font-size:10px;">TOTAL RÉUSSITES CENTRE</td>';
+    mats.forEach(m => {
+      const s=matC[m],rM=s.rM,rF=s.rF,rT=rM+rF,cM=s.cM,cF=s.cF,cT=cM+cF;
+      html += '<td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#2e7d32;">'+rM+'</td><td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#2e7d32;">'+rF+'</td><td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#2e7d32;font-weight:bold;">'+rT+'</td>' +
+        '<td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#1b5e20;">'+p(cM?rM/cM*100:0)+'</td><td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#1b5e20;">'+p(cF?rF/cF*100:0)+'</td><td style="padding:4px;border:1px solid #c8e6c9;text-align:center;color:#1b5e20;font-weight:bold;">'+p(cT?rT/cT*100:0)+'</td>';
+    });
+    html += '</tr>';
+    return html;
+  }
+  document.getElementById('cep-synth4a').innerHTML = buildRows(CEP_MAT1);
+  document.getElementById('cep-synth4b').innerHTML = buildRows(CEP_MAT2);
+}
+
+function cepSyncSignatures() {
+  const chef = document.getElementById('cep-chef').value || '___________';
+  const date = document.getElementById('cep-date').value || '_________';
+  const commune = document.getElementById('cep-commune').value || '___________';
+  const annee = document.getElementById('cep-annee').value;
+  const el = document.getElementById('cep-sig-chef');
+  const ed = document.getElementById('cep-sig-date');
+  const titre = document.getElementById('cep-titre-annee');
+  if (el) el.textContent = chef;
+  if (ed) ed.textContent = commune + ', le ' + date;
+  if (titre) titre.textContent = annee ? '— ' + annee : '';
+}
+
+['cep-chef','cep-date','cep-commune','cep-annee'].forEach(function(id) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', cepSyncSignatures);
+});
+
+function cepSauvegarder() {
+  const data = {
+    meta: {
+      centre: document.getElementById('cep-centre').value,
+      chef: document.getElementById('cep-chef').value,
+      commune: document.getElementById('cep-commune').value,
+      depart: document.getElementById('cep-depart').value,
+      annee: document.getElementById('cep-annee').value,
+      date: document.getElementById('cep-date').value
+    },
+    students: cepStudents, notes: cepNotes
+  };
+  localStorage.setItem('cep_blanc_data', JSON.stringify(data));
+  alert('💾 Données CEP sauvegardées dans le navigateur !');
+}
+
+function cepCharger() {
+  const saved = localStorage.getItem('cep_blanc_data');
+  if (!saved) { alert('⚠️ Aucune sauvegarde CEP trouvée.'); return; }
+  const data = JSON.parse(saved);
+  if (data.meta) {
+    document.getElementById('cep-centre').value = data.meta.centre || '';
+    document.getElementById('cep-chef').value = data.meta.chef || '';
+    document.getElementById('cep-commune').value = data.meta.commune || '';
+    document.getElementById('cep-depart').value = data.meta.depart || '';
+    document.getElementById('cep-annee').value = data.meta.annee || '2025-2026';
+    document.getElementById('cep-date').value = data.meta.date || '';
+  }
+  cepStudents = data.students || [];
+  cepNotes = data.notes || {};
+  cepRenderTable();
+  cepUpdateSyntheses();
+  cepSyncSignatures();
+  alert('🔄 Données CEP chargées avec succès !');
+}
+
+function cepExporterJSON() {
+  const data = {
+    meta: {
+      centre: document.getElementById('cep-centre').value,
+      chef: document.getElementById('cep-chef').value,
+      commune: document.getElementById('cep-commune').value,
+      depart: document.getElementById('cep-depart').value,
+      annee: document.getElementById('cep-annee').value,
+      date: document.getElementById('cep-date').value
+    },
+    students: cepStudents, notes: cepNotes
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cep_blanc_' + (data.meta.centre || 'centre').replace(/\s+/g,'_') + '.json';
+  a.click();
+}
+
+function cepImporterJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.meta) {
+        document.getElementById('cep-centre').value = data.meta.centre || '';
+        document.getElementById('cep-chef').value = data.meta.chef || '';
+        document.getElementById('cep-commune').value = data.meta.commune || '';
+        document.getElementById('cep-depart').value = data.meta.depart || '';
+        document.getElementById('cep-annee').value = data.meta.annee || '2025-2026';
+        document.getElementById('cep-date').value = data.meta.date || '';
+      }
+      cepStudents = data.students || [];
+      cepNotes = data.notes || {};
+      cepRenderTable();
+      cepUpdateSyntheses();
+      cepSyncSignatures();
+      alert('📥 Fichier JSON CEP importé avec succès !');
+    } catch(err) {
+      alert('⚠️ Erreur lors de la lecture du fichier JSON.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+function cepImprimerAnalyse() { cepTelechargePDF2(null); }
+
+// ─── Helpers partagés PDF CEP ───
+function _cepComputeStats() {
+  var ctre = { inscrits:{M:0,F:0}, composes:{M:0,F:0}, oui:{M:0,F:0}, non:{M:0,F:0} };
+  var matC = {};
+  CEP_MATIERES.forEach(function(m){ matC[m]={cM:0,cF:0,rM:0,rF:0}; });
+  var ecolesStats = {};
+  cepStudents.forEach(function(s) {
+    var sx=s.sexe, ec=s.ecole;
+    ctre.inscrits[sx]=(ctre.inscrits[sx]||0)+1;
+    if (!ecolesStats[ec]) {
+      ecolesStats[ec]={inscrits:{M:0,F:0},composes:{M:0,F:0},oui:{M:0,F:0},non:{M:0,F:0},mr:{},mc:{}};
+      CEP_MATIERES.forEach(function(m){ ecolesStats[ec].mr[m]={M:0,F:0}; ecolesStats[ec].mc[m]={M:0,F:0}; });
+    }
+    ecolesStats[ec].inscrits[sx]=(ecolesStats[ec].inscrits[sx]||0)+1;
+    var n=cepNotes[s.id];
+    if (n&&n.aCompose) {
+      ctre.composes[sx]=(ctre.composes[sx]||0)+1;
+      ecolesStats[ec].composes[sx]=(ecolesStats[ec].composes[sx]||0)+1;
+      if (n.seuilAtteint){ ctre.oui[sx]=(ctre.oui[sx]||0)+1; ecolesStats[ec].oui[sx]=(ecolesStats[ec].oui[sx]||0)+1; }
+      else { ctre.non[sx]=(ctre.non[sx]||0)+1; ecolesStats[ec].non[sx]=(ecolesStats[ec].non[sx]||0)+1; }
+    }
+    CEP_MATIERES.forEach(function(m){
+      var note=n?n[m]:null;
+      if (note!==null&&note!==undefined){ matC[m]['c'+sx]++; ecolesStats[ec].mc[m][sx]++;
+        if(note>=10){ matC[m]['r'+sx]++; ecolesStats[ec].mr[m][sx]++; } }
+    });
+  });
+  return {ctre:ctre, matC:matC, ecolesStats:ecolesStats,
+    ecolesKeys:Object.keys(ecolesStats).sort()};
+}
+function _cepP(v){ if(!isFinite(v)||isNaN(v)||v===0) return '0,00 %'; return (Math.floor(v*100)/100).toFixed(2).replace('.',',')+' %'; }
+function _cepPageHeader(doc,W,title,col,or,white){
+  doc.setFillColor(...col); doc.rect(0,0,W,16,'F');
+  doc.setFillColor(...or); doc.rect(0,16,W,1,'F');
+  doc.setTextColor(...white); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(title,W/2,11,{align:'center'}); doc.setTextColor(30,30,30);
+}
+
+// ─── PDF 1 : en-tête + liste candidats + tableaux 1-4B + signature (Paysage A4) ───
+async function cepTelechargePDF1(btn) {
+  if (!cepStudents || cepStudents.length === 0) {
+    alert('Aucun candidat chargé. Importez la liste avant de télécharger le PDF.');
+    return;
+  }
+  var origText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Génération…'; btn.disabled = true; }
+  try {
+    var { jsPDF } = window.jspdf;
+    var doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    var W = doc.internal.pageSize.getWidth();   // 297 mm
+    var H = doc.internal.pageSize.getHeight();  // 210 mm
+    var teal=[0,131,143], tealL=[0,188,212], blue=[21,101,192], or=[201,151,44];
+    var white=[255,255,255], dark=[30,30,30], green=[27,94,32], red=[183,28,28];
+
+    var centre = document.getElementById('cep-centre').value || '—';
+    var chef   = document.getElementById('cep-chef').value   || '—';
+    var commune= document.getElementById('cep-commune').value|| '—';
+    var depart = document.getElementById('cep-depart').value || '—';
+    var annee  = document.getElementById('cep-annee').value  || '—';
+    var datePV = document.getElementById('cep-date').value   || '';
+
+    // ── PAGE 1 : LISTE DES CANDIDATS ──
+    doc.setFillColor(...teal); doc.rect(0,0,W,17,'F');
+    doc.setFillColor(...or);   doc.rect(0,14,W,1.5,'F');
+    doc.setTextColor(...white); doc.setFontSize(14); doc.setFont('helvetica','bold');
+    doc.text('RÉSULTATS DU CEP BLANC '+annee, W/2, 11, {align:'center'});
+
+    doc.setTextColor(...dark); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('CENTRE : '+centre,      10, 25);
+    doc.text('COMMUNE : '+commune,    10, 31);
+    doc.text('DÉPARTEMENT : '+depart, 10, 37);
+    doc.text('Chef Centre : '+chef,   W-10, 25, {align:'right'});
+    doc.text('Année scolaire : '+annee, W-10, 31, {align:'right'});
+
+    // Tableau élèves
+    var tblData = [];
+    cepStudents.forEach(function(s) {
+      var n = cepNotes[s.id]||{};
+      function v(k){ return (n[k]!==null&&n[k]!==undefined) ? n[k] : '—'; }
+      tblData.push([
+        s.id, s.nom, s.sexe, s.ecole,
+        v('CE'),v('EE'),v('EST'),v('ES'),v('MATHS'),v('DICTEE'),v('EAVIVANT'),v('COUTDESSIN'),v('EPS'),
+        (n._total!=null&&n._total!==undefined)?n._total:'—',
+        (n._moy!=null&&n._moy!==undefined)?parseFloat(n._moy).toFixed(2):'—',
+        n.seuilAtteint?'OUI':(n.aCompose?'NON':'—'),
+        n._rang||'—'
+      ]);
+    });
+    doc.autoTable({
+      startY:42,
+      head:[['N° Table','NOM ET PRÉNOMS','SEXE','ÉCOLE','C.E','E.E','EST','ES','MATHS','DICTÉE','EA/VIV','COUTURE/D.','EPS','TOTAL','MOY.','SEUIL','RANG']],
+      body:tblData,
+      margin:{top:5, right:8, bottom:10, left:8},
+      styles:{fontSize:6.5, cellPadding:1.5, valign:'middle', overflow:'linebreak'},
+      headStyles:{fillColor:blue, textColor:white, fontStyle:'bold', fontSize:6.5, overflow:'hidden', minCellHeight:6},
+      alternateRowStyles:{fillColor:[240,248,255]},
+      columnStyles:{
+        0:{cellWidth:18,halign:'center'}, 1:{cellWidth:42},
+        2:{cellWidth:11,halign:'center'}, 3:{cellWidth:32},
+        4:{cellWidth:11,halign:'center'}, 5:{cellWidth:11,halign:'center'},
+        6:{cellWidth:11,halign:'center'}, 7:{cellWidth:11,halign:'center'},
+        8:{cellWidth:12,halign:'center'}, 9:{cellWidth:13,halign:'center'},
+        10:{cellWidth:13,halign:'center'},11:{cellWidth:13,halign:'center'},
+        12:{cellWidth:11,halign:'center'},13:{cellWidth:14,halign:'center'},
+        14:{cellWidth:13,halign:'center'},15:{cellWidth:12,halign:'center'},
+        16:{cellWidth:10,halign:'center'}
+      },
+      didParseCell:function(d){
+        if(d.section==='body'&&d.column.index===15){
+          if(d.cell.raw==='OUI') d.cell.styles.textColor=[26,71,49];
+          if(d.cell.raw==='NON') d.cell.styles.textColor=[192,57,43];
+        }
+        if(d.section==='body'&&d.column.index>=4&&d.column.index<=12){
+          var nv=parseFloat(d.cell.raw);
+          if(!isNaN(nv)&&nv<10){d.cell.styles.textColor=[192,57,43];d.cell.styles.fontStyle='bold';}
+        }
+      }
+    });
+
+    // ── Calcul stats ──
+    var st = _cepComputeStats();
+    var ctr=st.ctre, matC=st.matC, ecolesStats=st.ecolesStats, ecolesKeys=st.ecolesKeys;
+    var tI=(ctr.inscrits.M||0)+(ctr.inscrits.F||0);
+    var tC=(ctr.composes.M||0)+(ctr.composes.F||0);
+    var tO=(ctr.oui.M||0)+(ctr.oui.F||0);
+    var tN=(ctr.non.M||0)+(ctr.non.F||0);
+    var absM=(ctr.inscrits.M||0)-(ctr.composes.M||0);
+    var absF=(ctr.inscrits.F||0)-(ctr.composes.F||0);
+    var absT=tI-tC;
+    var p=_cepP;
+
+    // ── PAGE 2 : TABLEAUX 1 & 2 ──
+    doc.addPage();
+    _cepPageHeader(doc,W,'TABLEAUX DE SYNTHÈSE — '+centre+' — '+annee,teal,or,white);
+    var y=21;
+
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...teal);
+    doc.text('1. PARTICIPATION & RÉUSSITE AU SEUIL (CENTRE)',10,y); y+=4;
+    doc.setTextColor(...dark);
+
+    doc.autoTable({startY:y,
+      head:[['CATÉGORIE','G','F','TOTAL','% G','% F','% T']],
+      body:[
+        ['Inscrits', ctr.inscrits.M||0, ctr.inscrits.F||0, tI, p(tI?(ctr.inscrits.M||0)/tI*100:0), p(tI?(ctr.inscrits.F||0)/tI*100:0),'100,00 %'],
+        ['Ont composé', ctr.composes.M||0, ctr.composes.F||0, tC, p(tI?(ctr.composes.M||0)/tI*100:0), p(tI?(ctr.composes.F||0)/tI*100:0), p(tI?tC/tI*100:0)],
+        ['Ont atteint le seuil', ctr.oui.M||0, ctr.oui.F||0, tO, p((ctr.composes.M||0)?(ctr.oui.M||0)/(ctr.composes.M||1)*100:0), p((ctr.composes.F||0)?(ctr.oui.F||0)/(ctr.composes.F||1)*100:0), p(tC?tO/tC*100:0)],
+        ["N'ont pas atteint le seuil", ctr.non.M||0, ctr.non.F||0, tN, p((ctr.composes.M||0)?(ctr.non.M||0)/(ctr.composes.M||1)*100:0), p((ctr.composes.F||0)?(ctr.non.F||0)/(ctr.composes.F||1)*100:0), p(tC?tN/tC*100:0)],
+        ["N'ont pas composé (Absents)", absM, absF, absT, p(tI?absM/tI*100:0), p(tI?absF/tI*100:0), p(tI?absT/tI*100:0)]
+      ],
+      styles:{fontSize:8.5,cellPadding:2.5,halign:'center'},
+      headStyles:{fillColor:tealL,textColor:white,fontStyle:'bold'},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:70}},
+      alternateRowStyles:{fillColor:[240,253,254]},
+      didParseCell:function(d){
+        if(d.section==='body'&&d.row.index===2) d.cell.styles.textColor=[26,71,49];
+        if(d.section==='body'&&d.row.index===3) d.cell.styles.textColor=[192,57,43];
+        if(d.section==='body'&&d.row.index===4) d.cell.styles.textColor=[136,14,79];
+      }
+    });
+
+    y=doc.lastAutoTable.finalY+8;
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...teal);
+    doc.text('2. RÉUSSITE PAR MATIÈRE (CENTRE)',10,y); y+=4;
+    doc.setTextColor(...dark);
+
+    var m2body = CEP_MATIERES.map(function(m){
+      var s2=matC[m]; var cT=(s2.cM||0)+(s2.cF||0), rT=(s2.rM||0)+(s2.rF||0);
+      var ecM=(s2.cM||0)-(s2.rM||0), ecF=(s2.cF||0)-(s2.rF||0), ecT=cT-rT;
+      return [CEP_MAT_LABELS[m],
+        tI,tI,tI, p(tI?(ctr.inscrits.M||0)/tI*100:0), p(tI?(ctr.inscrits.F||0)/tI*100:0),'100,00 %',
+        s2.rM||0, s2.rF||0, rT, p(s2.cM?(s2.rM||0)/s2.cM*100:0), p(s2.cF?(s2.rF||0)/s2.cF*100:0), p(cT?rT/cT*100:0),
+        ecM, ecF, ecT, p(s2.cM?ecM/s2.cM*100:0), p(s2.cF?ecF/s2.cF*100:0), p(cT?ecT/cT*100:0)];
+    });
+    doc.autoTable({startY:y,
+      head:[
+        [{content:'MATIÈRE',rowSpan:2,styles:{valign:'middle',halign:'left'}},
+         {content:'INSCRITS',colSpan:6},
+         {content:'ONT ATTEINT LE SEUIL (≥10)',colSpan:6,styles:{fillColor:[0,151,167]}},
+         {content:"N'ONT PAS ATTEINT (<10)",colSpan:6,styles:{fillColor:[0,105,92]}}],
+        ['G','F','T','%G','%F','%T','G','F','T','%G','%F','%T','G','F','T','%G','%F','%T']
+      ],
+      body:m2body,
+      styles:{fontSize:7,cellPadding:1.8,halign:'center'},
+      headStyles:{fillColor:tealL,textColor:white,fontStyle:'bold',fontSize:7},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:24}},
+      alternateRowStyles:{fillColor:[240,253,254]}
+    });
+
+    // ── PAGE 3 : TABLEAU 3 ──
+    doc.addPage();
+    _cepPageHeader(doc,W,'3. STATISTIQUES GLOBALES PAR ÉCOLE — '+centre,teal,or,white);
+    var t3body=[];
+    ecolesKeys.forEach(function(ec){
+      var es=ecolesStats[ec];
+      var insT=(es.inscrits.M||0)+(es.inscrits.F||0),compT=(es.composes.M||0)+(es.composes.F||0);
+      var ouiT=(es.oui.M||0)+(es.oui.F||0),nonT=(es.non.M||0)+(es.non.F||0);
+      t3body.push([ec,
+        es.inscrits.M||0,es.inscrits.F||0,insT,
+        es.composes.M||0,es.composes.F||0,compT,
+        es.oui.M||0,es.oui.F||0,ouiT,
+        es.non.M||0,es.non.F||0,nonT,
+        p(es.composes.M?(es.oui.M||0)/(es.composes.M)*100:0),
+        p(es.composes.F?(es.oui.F||0)/(es.composes.F)*100:0),
+        p(compT?ouiT/compT*100:0)]);
+    });
+    t3body.push(['TOTAL CENTRE',
+      ctr.inscrits.M||0,ctr.inscrits.F||0,tI,
+      ctr.composes.M||0,ctr.composes.F||0,tC,
+      ctr.oui.M||0,ctr.oui.F||0,tO,
+      ctr.non.M||0,ctr.non.F||0,tN,
+      p((ctr.composes.M||0)?(ctr.oui.M||0)/(ctr.composes.M||1)*100:0),
+      p((ctr.composes.F||0)?(ctr.oui.F||0)/(ctr.composes.F||1)*100:0),
+      p(tC?tO/tC*100:0)]);
+    doc.autoTable({startY:20,
+      head:[
+        [{content:'ÉCOLES DU CENTRE',rowSpan:2,styles:{valign:'middle',halign:'left'}},
+         {content:'INSCRITS',colSpan:3},{content:'ONT COMPOSÉ',colSpan:3},
+         {content:'SEUIL ATTEINT',colSpan:3,styles:{fillColor:[0,151,167]}},
+         {content:'SEUIL NON ATTEINT',colSpan:3,styles:{fillColor:[0,105,92]}},
+         {content:'% RÉUSSITE',colSpan:3,styles:{fillColor:[27,94,32]}}],
+        ['G','F','T','G','F','T','G','F','T','G','F','T','G','F','T']
+      ],
+      body:t3body,
+      styles:{fontSize:8,cellPadding:2.2,halign:'center'},
+      headStyles:{fillColor:tealL,textColor:white,fontStyle:'bold'},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:58}},
+      alternateRowStyles:{fillColor:[240,253,254]},
+      didParseCell:function(d){
+        if(d.section==='body'&&d.row.index===t3body.length-1){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[224,247,250];}
+        if(d.section==='body'&&d.column.index>=7&&d.column.index<=9) d.cell.styles.textColor=[46,125,50];
+        if(d.section==='body'&&d.column.index>=10&&d.column.index<=12) d.cell.styles.textColor=[198,40,40];
+      }
+    });
+
+    // ── PAGES 4 & 5 : TABLEAUX 4A & 4B ──
+    // Format % court : "67%" ou "0%" — fontSize 6 garantit que "100%" tient dans ~8mm
+    function pp(v){ return (!isFinite(v)||isNaN(v))?'0%':Math.round(v)+'%'; }
+
+    // Marges identiques pour les deux tableaux (paysage A4 = 297mm, usable = 281mm)
+    var mg4 = {top:5, right:8, bottom:10, left:8};
+    var eW4 = 48; // largeur colonne ÉCOLE
+    var usable4 = 281; // 297 - 8 - 8
+
+    // build4(mats, title, isFirst) — isFirst=true : nouvelle page ; false : suit le précédent
+    function build4(mats, title, isFirst){
+      var nbSub = mats.length * 6;
+      // Sous-colonnes G/F/T plus étroites, colonnes % légèrement plus larges
+      var gftW = Math.floor((usable4 - eW4) / nbSub * 0.9 * 10) / 10;
+      var pctW = Math.floor((usable4 - eW4) / nbSub * 1.1 * 10) / 10;
+
+      var matColors  = [[0,96,107],[0,77,74],[0,96,107],[0,77,74],[0,96,107]];
+      var matColorsL = [[0,151,167],[0,121,107],[0,151,167],[0,121,107],[0,151,167]];
+
+      var h1 = [{content:'ÉCOLE', rowSpan:2, styles:{valign:'middle', halign:'left',
+                  fillColor:blue, fontSize:7, fontStyle:'bold'}}];
+      var h2 = [];
+      var colStyles = {0:{halign:'left', fontStyle:'bold', cellWidth:eW4, overflow:'linebreak'}};
+
+      mats.forEach(function(m, mi){
+        var mc = matColors[mi % matColors.length];
+        var ml = matColorsL[mi % matColorsL.length];
+        h1.push({content:CEP_MAT_LABELS[m], colSpan:6,
+                 styles:{halign:'center', fillColor:mc, fontSize:7, fontStyle:'bold'}});
+        ['G','F','T','%G','%F','%T'].forEach(function(hh, hi){
+          h2.push({content:hh, styles:{halign:'center', fillColor:ml, fontSize:6.5, fontStyle:'bold'}});
+          var ci = 1 + mi*6 + hi;
+          colStyles[ci] = {halign:'center', cellWidth: hi>=3 ? pctW : gftW, overflow:'hidden'};
+        });
+      });
+
+      var body4 = [];
+      ecolesKeys.forEach(function(ec){
+        var es = ecolesStats[ec];
+        var row = [ec];
+        mats.forEach(function(m){
+          var rM=es.mr[m].M||0, rF=es.mr[m].F||0, rT=rM+rF;
+          var cM=es.mc[m].M||0, cF=es.mc[m].F||0, cT=cM+cF;
+          row.push(rM, rF, rT, pp(cM?rM/cM*100:0), pp(cF?rF/cF*100:0), pp(cT?rT/cT*100:0));
+        });
+        body4.push(row);
+      });
+
+      var totRow = ['TOTAL CENTRE'];
+      mats.forEach(function(m){
+        var s2 = matC[m];
+        var rT=(s2.rM||0)+(s2.rF||0), cT=(s2.cM||0)+(s2.cF||0);
+        totRow.push(s2.rM||0, s2.rF||0, rT,
+          pp(s2.cM?(s2.rM||0)/s2.cM*100:0),
+          pp(s2.cF?(s2.rF||0)/s2.cF*100:0),
+          pp(cT?rT/cT*100:0));
+      });
+      body4.push(totRow);
+
+      // Dessine la bande de titre identique à _cepPageHeader mais à une position Y donnée
+      function drawBand(y){
+        doc.setFillColor(...teal);
+        doc.rect(mg4.left, y, usable4, 9, 'F');
+        doc.setFillColor(...or);
+        doc.rect(mg4.left, y+9, usable4, 1.2, 'F');
+        doc.setTextColor(...white);
+        doc.setFontSize(8); doc.setFont('helvetica','bold');
+        doc.text(title, mg4.left + usable4/2, y+6, {align:'center'});
+        doc.setTextColor(...dark);
+      }
+
+      var sy;
+      if (isFirst) {
+        doc.addPage();
+        _cepPageHeader(doc,W,title,teal,or,white);
+        sy = 22;
+      } else {
+        // Suite immédiate après le tableau précédent, ou nouvelle page si pas assez de place
+        sy = doc.lastAutoTable.finalY + 8;
+        if (sy + 40 > H - 12) {
+          doc.addPage();
+          _cepPageHeader(doc,W,title,teal,or,white);
+          sy = 22;
+        } else {
+          drawBand(sy);
+          sy += 12;
+        }
+      }
+
+      doc.autoTable({
+        startY: sy,
+        head: [h1, h2],
+        body: body4,
+        margin: mg4,
+        styles: {fontSize:6, cellPadding:1, halign:'center', overflow:'hidden'},
+        headStyles: {textColor:white, fontStyle:'bold', fontSize:6.5, halign:'center', overflow:'hidden'},
+        bodyStyles: {textColor:dark, lineColor:[220,220,220], lineWidth:0},
+        alternateRowStyles: {fillColor:[240,253,254]},
+        columnStyles: colStyles,
+        didParseCell: function(d){
+          if (d.section==='body' && d.row.index===body4.length-1){
+            d.cell.styles.fontStyle='bold';
+            d.cell.styles.fillColor=[200,240,244];
+            d.cell.styles.textColor=[0,70,80];
+          }
+          if (d.section==='body' && d.column.index>=1 && d.row.index < body4.length-1){
+            var ci2 = (d.column.index-1) % 6;
+            if (ci2>=3){
+              var pv = parseInt(d.cell.raw);
+              if(!isNaN(pv) && pv>=50) d.cell.styles.textColor=[27,94,32];
+              else if(!isNaN(pv) && pv>0) d.cell.styles.textColor=[183,28,28];
+            }
+          }
+        }
+      });
+    }
+    build4(CEP_MAT1,'4.A REUSSITE PAR MATIERE ET PAR ECOLE — PARTIE 1  (C.E · E.E · EST · ES · MATHS)', true);
+    build4(CEP_MAT2,'4.B REUSSITE PAR MATIERE ET PAR ECOLE — PARTIE 2  (DICTEE · EA/VIVANT · COUTURE/DESSIN · EPS)', false);
+
+    // ── Signature ──
+    var sigY = doc.lastAutoTable.finalY + 18;
+    if (sigY > H-35) { doc.addPage(); sigY=20; }
+    doc.setTextColor(...dark); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Le Chef Centre', W-60, sigY, {align:'center'});
+    doc.setDrawColor(...dark); doc.setLineWidth(0.4);
+    doc.line(W-95, sigY+18, W-25, sigY+18);
+    if (chef && chef!=='—') doc.text(chef, W-60, sigY+24, {align:'center'});
+
+    // Footer
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(170,170,170);
+    var now1=new Date();
+    var pages1=doc.internal.getNumberOfPages();
+    for(var pg=1;pg<=pages1;pg++){
+      doc.setPage(pg);
+      doc.text('GESTIONNAIRE D\'ÉVALUATION 3.0 · By MAÎTRE MARIANO · Généré le '+now1.toLocaleDateString('fr-FR'), W/2, H-3, {align:'center'});
+      doc.text('Page '+pg+'/'+pages1, W-10, H-3, {align:'right'});
+    }
+
+    doc.save('CEP_Rapport_'+(centre.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,''))+'_'+(annee.replace(/[^0-9\-]/g,''))+'.pdf');
+  } catch(err) {
+    console.error(err);
+    alert('Erreur lors de la génération du PDF : '+err.message);
+  }
+  if (btn) { btn.textContent = origText||'⬇ Télécharger en PDF'; btn.disabled=false; }
+}
+
+// ─── PDF 2 : analyse psychopédagogique (Paysage A4) ───
+async function cepTelechargePDF2(btn) {
+  if (!cepStudents||cepStudents.length===0) {
+    alert('Aucun candidat chargé.'); return;
+  }
+  var composants=cepStudents.filter(function(s){ return cepNotes[s.id]&&cepNotes[s.id].aCompose; });
+  if (composants.length===0) {
+    alert('Aucune note saisie. Saisissez des notes avant de générer l\'analyse.'); return;
+  }
+  var origText=btn?btn.textContent:'';
+  if (btn){ btn.textContent='⏳ Génération…'; btn.disabled=true; }
+  try {
+    var { jsPDF }=window.jspdf;
+    var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+    var purple=[74,20,140], purpleL=[123,31,162], or=[201,151,44];
+    var white=[255,255,255], dark=[30,30,30];
+    var green=[27,94,32], blue=[21,101,192], orange=[230,81,0], red=[183,28,28];
+    var teal=[0,131,143], tealL=[0,188,212];
+
+    var centre=document.getElementById('cep-centre').value||'—';
+    var chef  =document.getElementById('cep-chef').value  ||'—';
+    var annee =document.getElementById('cep-annee').value ||'—';
+    var datePV=document.getElementById('cep-date').value  ||'';
+
+    // ── Calcul analyse ──
+    var absents=cepStudents.filter(function(s){ return !cepNotes[s.id]||!cepNotes[s.id].aCompose; });
+    var tIns=cepStudents.length, tComp=composants.length, tAbs=absents.length;
+    var masculins=composants.filter(function(s){ return s.sexe==='M'; });
+    var feminins =composants.filter(function(s){ return s.sexe==='F'; });
+    var admisAll=composants.filter(function(s){ return cepNotes[s.id].seuilAtteint; });
+    var admisG  =masculins.filter(function(s){  return cepNotes[s.id].seuilAtteint; });
+    var admisF  =feminins.filter(function(s){   return cepNotes[s.id].seuilAtteint; });
+    function avg(a){ return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:0; }
+    var moys  =composants.map(function(s){ return cepNotes[s.id]._moy||0; });
+    var moysG =masculins.map(function(s){  return cepNotes[s.id]._moy||0; });
+    var moysF2=feminins.map(function(s){   return cepNotes[s.id]._moy||0; });
+    var moyGlob   =moys.length  ?avg(moys).toFixed(2)  :'—';
+    var moyGarcons=moysG.length ?avg(moysG).toFixed(2) :'—';
+    var moyFilles =moysF2.length?avg(moysF2).toFixed(2):'—';
+    var maxMoy=moys.length?Math.max.apply(null,moys).toFixed(2):'—';
+    var minMoy=moys.length?Math.min.apply(null,moys).toFixed(2):'—';
+    var t15  =composants.filter(function(s){ return (cepNotes[s.id]._moy||0)>=15; }).length;
+    var t12  =composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=12&&m<15; }).length;
+    var t10  =composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=10&&m<12; }).length;
+    var t8   =composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=8 &&m<10; }).length;
+    var tInf8=composants.filter(function(s){ return (cepNotes[s.id]._moy||0)<8; }).length;
+
+    var matStats={};
+    CEP_MATIERES.forEach(function(m){
+      var notes=composants.map(function(s){ return cepNotes[s.id][m]; }).filter(function(n){ return n!==null&&n!==undefined; });
+      var reu=notes.filter(function(n){ return n>=10; }).length;
+      var nG=masculins.map(function(s){ return cepNotes[s.id][m]; }).filter(function(n){ return n!==null&&n!==undefined; });
+      var nF=feminins.map(function(s){  return cepNotes[s.id][m]; }).filter(function(n){ return n!==null&&n!==undefined; });
+      matStats[m]={moy:notes.length?avg(notes).toFixed(2):'—',
+        pct:notes.length?((reu/notes.length)*100).toFixed(1):'0',
+        rG:nG.filter(function(n){return n>=10;}).length, rF:nF.filter(function(n){return n>=10;}).length,
+        cG:nG.length, cF:nF.length, label:CEP_MAT_LABELS[m]};
+    });
+    var matsSort=CEP_MATIERES.slice().sort(function(a,b){ return parseFloat(matStats[b].pct)-parseFloat(matStats[a].pct); });
+    var meilleures=matsSort.slice(0,2).map(function(m){ return matStats[m].label+' ('+matStats[m].pct+'%)'; }).join(', ');
+    var plusFaibles=matsSort.slice(-2).reverse().map(function(m){ return matStats[m].label+' ('+matStats[m].pct+'%)'; }).join(', ');
+
+    var ecolesD={};
+    composants.forEach(function(s){
+      var ec=s.ecole;
+      if(!ecolesD[ec]) ecolesD[ec]={total:0,admis:0,moys:[]};
+      ecolesD[ec].total++;
+      if(cepNotes[s.id].seuilAtteint) ecolesD[ec].admis++;
+      if(cepNotes[s.id]._moy!=null) ecolesD[ec].moys.push(cepNotes[s.id]._moy);
+    });
+    var ecolesSort=Object.keys(ecolesD).sort(function(a,b){
+      var pA=ecolesD[a].total?ecolesD[a].admis/ecolesD[a].total:0;
+      var pB=ecolesD[b].total?ecolesD[b].admis/ecolesD[b].total:0;
+      return pB-pA;
+    });
+
+    var pctReussite=tComp?((admisAll.length/tComp)*100).toFixed(1):'0';
+    var pctG=masculins.length?((admisG.length/masculins.length)*100).toFixed(1):'0';
+    var pctF=feminins.length ?((admisF.length/feminins.length) *100).toFixed(1):'0';
+    var pctAbs=tIns?((tAbs/tIns)*100).toFixed(1):'0';
+    var pctPartic=tIns?((tComp/tIns)*100).toFixed(1):'0';
+    var diffGenre=parseFloat(pctG)-parseFloat(pctF);
+
+    var genreAnalyse=diffGenre>5
+      ?'Les garçons surpassent les filles avec un écart de '+diffGenre.toFixed(1)+' pts ('+pctG+'% vs '+pctF+'%). Un accompagnement différencié des apprenantes est recommandé.'
+      :diffGenre<-5
+      ?'Les filles surpassent les garçons avec un écart de '+Math.abs(diffGenre).toFixed(1)+' pts ('+pctF+'% vs '+pctG+'%). Témoignage d\'un engagement féminin remarquable.'
+      :'Parité quasi équilibrée entre garçons ('+pctG+'%) et filles ('+pctF+'%), signe d\'une équité pédagogique satisfaisante.';
+    var qualitative=parseFloat(pctReussite)>=75
+      ?'Les résultats sont excellents et témoignent d\'une maîtrise solide des compétences évaluées.'
+      :parseFloat(pctReussite)>=50
+      ?'Les résultats sont satisfaisants, bien que des efforts complémentaires restent nécessaires pour les candidats en difficulté.'
+      :parseFloat(pctReussite)>=30
+      ?'Les résultats restent insuffisants. Des mesures de remédiation pédagogique s\'imposent.'
+      :'Les résultats sont préoccupants. Un plan d\'urgence de remédiation est fortement recommandé.';
+    var absStr=tAbs>0
+      ?tAbs+' candidat(s) ('+pctAbs+'% des inscrits) n\'ont pas composé.'
+      :'Tous les candidats inscrits ont composé (participation : 100%).';
+
+    // ── PAGE 1 : En-tête + KPIs + Analyse I, II, III ──
+    doc.setFillColor(...purple); doc.rect(0,0,W,20,'F');
+    doc.setFillColor(...or);     doc.rect(0,20,W,1.5,'F');
+    doc.setTextColor(...white); doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text('ANALYSE PSYCHOPÉDAGOGIQUE DES RÉSULTATS',W/2,9,{align:'center'});
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.setTextColor(220,180,255);
+    doc.text('Centre : '+centre+'   |   Année : '+annee+(datePV?'   |   PV du : '+datePV:''),W/2,17,{align:'center'});
+
+    var y=25; doc.setTextColor(...dark);
+    // 3 KPI boxes
+    var bw=(W-22)/3;
+    function kpi(x,col,val,lbl,sub){
+      doc.setFillColor(...col); doc.roundedRect(x,y,bw-1,22,3,3,'F');
+      doc.setTextColor(...white); doc.setFontSize(16); doc.setFont('helvetica','bold');
+      doc.text(val,x+bw/2-0.5,y+10,{align:'center'});
+      doc.setFontSize(8); doc.setFont('helvetica','normal');
+      doc.text(lbl,x+bw/2-0.5,y+16,{align:'center'});
+      doc.setFontSize(7); doc.text(sub,x+bw/2-0.5,y+21,{align:'center'});
+    }
+    kpi(10, blue, pctReussite+'%', 'Taux de réussite global', admisAll.length+' / '+tComp+' composants');
+    kpi(10+bw, green, moyGlob, 'Moyenne générale /20', 'Max: '+maxMoy+'   Min: '+minMoy);
+    kpi(10+bw*2, purple, String(tIns), 'Candidats inscrits', tComp+' composants · '+tAbs+' absent(s)');
+    y+=27; doc.setTextColor(...dark);
+
+    function secHeader(col, num, title){
+      doc.setFillColor(...col.map(function(c){return Math.min(255,c+180);}));
+      doc.roundedRect(8,y,W-16,7,2,2,'F');
+      doc.setDrawColor(...col); doc.setLineWidth(0.5);
+      doc.line(8,y,8,y+7); doc.line(12,y,12,y+7);
+      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...col);
+      doc.text(num+'. '+title,15,y+5); y+=10; doc.setTextColor(...dark);
+    }
+
+    // I. Analyse quantitative
+    secHeader(purpleL,'I','ANALYSE QUANTITATIVE');
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    var q1='Sur les '+tIns+' candidats inscrits au centre '+centre+' pour l\'année '+annee+', '+tComp+' ont effectivement composé ('+pctPartic+'%). '+absStr;
+    var q2='Parmi les composants, '+admisAll.length+' ont atteint le seuil de réussite (>= 6 matieres/9 avec note >= 10), soit '+pctReussite+'%. Moyenne generale : '+moyGlob+'/20. Note max : '+maxMoy+'. Note min : '+minMoy+'.';
+    var l1=doc.splitTextToSize(q1,W-20); doc.text(l1,10,y); y+=l1.length*5+2;
+    var l2=doc.splitTextToSize(q2,W-20); doc.text(l2,10,y); y+=l2.length*5+5;
+
+    // II. Analyse qualitative + tranches
+    secHeader([46,125,50],'II','ANALYSE QUALITATIVE');
+    var lq=doc.splitTextToSize(qualitative,W-20); doc.text(lq,10,y); y+=lq.length*5+4;
+    doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(27,94,32);
+    doc.text('Répartition par tranches de moyennes :',10,y); y+=4; doc.setTextColor(...dark);
+    doc.autoTable({startY:y,
+      head:[['Tranche de moyennes','Nb élèves','% des composants']],
+      body:[
+        ['Tres bien (>= 15)', t15, tComp?((t15/tComp)*100).toFixed(1)+'%':'0%'],
+        ['Bien (12 - 14,99)', t12, tComp?((t12/tComp)*100).toFixed(1)+'%':'0%'],
+        ['Passable (10 - 11,99)', t10, tComp?((t10/tComp)*100).toFixed(1)+'%':'0%'],
+        ['Insuffisant (8 - 9,99)', t8, tComp?((t8/tComp)*100).toFixed(1)+'%':'0%'],
+        ['Tres insuffisant (< 8)', tInf8, tComp?((tInf8/tComp)*100).toFixed(1)+'%':'0%']
+      ],
+      styles:{fontSize:8.5,cellPadding:2.5},
+      headStyles:{fillColor:[46,125,50],textColor:white,fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:70},1:{halign:'center',cellWidth:28},2:{halign:'center',cellWidth:40}},
+      tableWidth:'wrap', margin:{left:10},
+      didParseCell:function(d){
+        if(d.section==='body'){
+          var cols=[[27,94,32],[21,101,192],[76,175,80],[230,81,0],[183,28,28]];
+          d.cell.styles.textColor=cols[d.row.index]||dark; d.cell.styles.fontStyle='bold';
+        }
+      }
+    });
+    y=doc.lastAutoTable.finalY+6;
+
+    // III. Analyse genrée
+    secHeader([21,101,192],'III','ANALYSE GENRÉE');
+    var gw=62;
+    doc.setFillColor(227,242,253); doc.roundedRect(10,y,gw,18,2,2,'F');
+    doc.setTextColor(21,101,192); doc.setFontSize(15); doc.setFont('helvetica','bold');
+    doc.text(pctG+'%',10+gw/2,y+9,{align:'center'});
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(85,85,85);
+    doc.text('Taux réussite Garçons',10+gw/2,y+13.5,{align:'center'});
+    doc.text(admisG.length+'/'+masculins.length+' · Moy: '+moyGarcons,10+gw/2,y+17,{align:'center'});
+
+    doc.setFillColor(252,228,236); doc.roundedRect(10+gw+4,y,gw,18,2,2,'F');
+    doc.setTextColor(194,24,91); doc.setFontSize(15); doc.setFont('helvetica','bold');
+    doc.text(pctF+'%',10+gw+4+gw/2,y+9,{align:'center'});
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(85,85,85);
+    doc.text('Taux réussite Filles',10+gw+4+gw/2,y+13.5,{align:'center'});
+    doc.text(admisF.length+'/'+feminins.length+' · Moy: '+moyFilles,10+gw+4+gw/2,y+17,{align:'center'});
+
+    var gx=10+gw+4+gw+8;
+    doc.setTextColor(...dark); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    var gl=doc.splitTextToSize(genreAnalyse,W-gx-12);
+    doc.text(gl,gx,y+7); y+=25;
+
+    // IV. Analyse par matière
+    if(y>H-60){ doc.addPage(); y=14; }
+    secHeader([245,127,23],'IV','ANALYSE PAR MATIÈRE');
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...dark);
+    doc.text('Points forts : '+meilleures+'.   Points à renforcer : '+plusFaibles+'.',10,y); y+=6;
+    var matBody=CEP_MATIERES.map(function(m){
+      var st=matStats[m];
+      return [st.label, st.moy, st.rG+'/'+st.cG, st.rF+'/'+st.cF, st.pct+'%'];
+    });
+    doc.autoTable({startY:y,
+      head:[['Matière','Moy/20','Réussites G','Réussites F','% Réussite']],
+      body:matBody,
+      styles:{fontSize:8.5,cellPadding:2.5,halign:'center'},
+      headStyles:{fillColor:[245,127,23],textColor:white,fontStyle:'bold'},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:36},1:{cellWidth:22},2:{cellWidth:32},3:{cellWidth:32},4:{cellWidth:26}},
+      tableWidth:'wrap', margin:{left:10},
+      didParseCell:function(d){
+        if(d.section==='body'&&d.column.index===4){
+          var pv=parseFloat(d.cell.raw);
+          d.cell.styles.fontStyle='bold';
+          d.cell.styles.textColor=pv>=75?green:pv>=50?blue:red;
+        }
+      }
+    });
+    y=doc.lastAutoTable.finalY+6;
+
+    // V. Classement des écoles
+    if(y>H-55){ doc.addPage(); y=14; }
+    secHeader([57,73,171],'V','CLASSEMENT DES ÉCOLES');
+    var medals=['1er','2e','3e'];
+    var ecBody=ecolesSort.map(function(ec,i){
+      var d=ecolesD[ec];
+      var pctEc=d.total?((d.admis/d.total)*100).toFixed(1):'0';
+      var moyEc=d.moys.length?avg(d.moys).toFixed(2):'—';
+      return [(medals[i]||String(i+1)+'.')+' '+ec, d.total, d.admis, moyEc, pctEc+'%'];
+    });
+    doc.autoTable({startY:y,
+      head:[['École','Composants','Admis','Moy. école','% Réussite']],
+      body:ecBody,
+      styles:{fontSize:8.5,cellPadding:2.5},
+      headStyles:{fillColor:[57,73,171],textColor:white,fontStyle:'bold'},
+      columnStyles:{0:{halign:'left',fontStyle:'bold',cellWidth:90},1:{halign:'center',cellWidth:28},2:{halign:'center',cellWidth:24},3:{halign:'center',cellWidth:28},4:{halign:'center',cellWidth:26}},
+      tableWidth:'wrap', margin:{left:10},
+      didParseCell:function(d){
+        if(d.section==='body'&&d.column.index===4){
+          d.cell.styles.fontStyle='bold';
+          d.cell.styles.textColor=parseFloat(d.cell.raw)>=50?green:red;
+        }
+      }
+    });
+    y=doc.lastAutoTable.finalY+6;
+
+    // VI. Recommandations
+    if(y>H-55){ doc.addPage(); y=14; }
+    secHeader([194,24,91],'VI','RECOMMANDATIONS PSYCHOPÉDAGOGIQUES');
+    var recs=['1. Organiser des séances de remédiation ciblées pour les élèves ayant des moyennes inférieures à 10, en priorité dans les matières faibles.'];
+    if(Math.abs(diffGenre)>5)
+      recs.push('2. Mettre en place un soutien différencié selon le genre pour réduire l\'écart de '+Math.abs(diffGenre).toFixed(1)+' pts observé.');
+    else
+      recs.push('2. Maintenir les pratiques d\'équité de genre qui ont produit des résultats équilibrés.');
+    if(tAbs>0) recs.push('3. Investiguer les '+tAbs+' cas d\'absentéisme (facteurs socio-économiques ou psychologiques).');
+    recs.push((tAbs>0?'4.':'3.')+' Valoriser les résultats positifs par une cérémonie de distinctions pour motiver l\'ensemble des apprenants.');
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...dark);
+    recs.forEach(function(r){
+      var rl=doc.splitTextToSize(r,W-22); doc.text(rl,12,y); y+=rl.length*5+2;
+    });
+
+    // Signature
+    y+=10;
+    if(y>H-30){ doc.addPage(); y=20; }
+    doc.setTextColor(...dark); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Le Chef Centre',W-60,y,{align:'center'});
+    doc.setDrawColor(...dark); doc.setLineWidth(0.4);
+    doc.line(W-95,y+18,W-25,y+18);
+    if(chef&&chef!=='—') doc.text(chef,W-60,y+24,{align:'center'});
+
+    // Footer toutes pages
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(170,170,170);
+    var now2=new Date(); var pages2=doc.internal.getNumberOfPages();
+    for(var pg2=1;pg2<=pages2;pg2++){
+      doc.setPage(pg2);
+      doc.text('GESTIONNAIRE D\'ÉVALUATION 3.0 · By MAÎTRE MARIANO · Généré le '+now2.toLocaleDateString('fr-FR'),W/2,H-3,{align:'center'});
+      doc.text('Page '+pg2+'/'+pages2,W-10,H-3,{align:'right'});
+    }
+
+    var cf=(centre.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,''));
+    var af=(annee.replace(/[^0-9\-]/g,''));
+    doc.save('Analyse_Psychopedagogique_'+cf+'_'+af+'.pdf');
+  } catch(err){
+    console.error(err);
+    alert('Erreur lors de la génération du PDF : '+err.message);
+  }
+  if(btn){ btn.textContent=origText||'⬇ Télécharger en PDF'; btn.disabled=false; }
+}
+
+function cepGenererAnalyse() {
+  var container = document.getElementById('cep-analyse-content');
+  if (!cepStudents || cepStudents.length === 0) {
+    container.innerHTML = '<div style="color:#999;font-style:italic;text-align:center;padding:20px;">Importez la liste et saisissez des notes pour g\u00e9n\u00e9rer l\'analyse.</div>';
+    return;
+  }
+
+  var composants = cepStudents.filter(function(s){ return cepNotes[s.id] && cepNotes[s.id].aCompose; });
+  var absents = cepStudents.filter(function(s){ return !cepNotes[s.id] || !cepNotes[s.id].aCompose; });
+  var tIns = cepStudents.length;
+  var tComp = composants.length;
+  var tAbs = absents.length;
+
+  var masculins = composants.filter(function(s){ return s.sexe === 'M'; });
+  var feminins = composants.filter(function(s){ return s.sexe === 'F'; });
+  var admisAll = composants.filter(function(s){ return cepNotes[s.id].seuilAtteint; });
+  var echecAll = composants.filter(function(s){ return !cepNotes[s.id].seuilAtteint; });
+  var admisG = masculins.filter(function(s){ return cepNotes[s.id].seuilAtteint; });
+  var admisF = feminins.filter(function(s){ return cepNotes[s.id].seuilAtteint; });
+
+  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
+
+  var moys = composants.map(function(s){ return cepNotes[s.id]._moy || 0; });
+  var moysG = masculins.map(function(s){ return cepNotes[s.id]._moy || 0; });
+  var moysF = feminins.map(function(s){ return cepNotes[s.id]._moy || 0; });
+  var moyGlob = moys.length ? avg(moys).toFixed(2) : '\u2014';
+  var moyGarcons = moysG.length ? avg(moysG).toFixed(2) : '\u2014';
+  var moyFilles = moysF.length ? avg(moysF).toFixed(2) : '\u2014';
+  var maxMoy = moys.length ? Math.max.apply(null,moys).toFixed(2) : '\u2014';
+  var minMoy = moys.length ? Math.min.apply(null,moys).toFixed(2) : '\u2014';
+
+  var t15   = composants.filter(function(s){ return (cepNotes[s.id]._moy||0) >= 15; }).length;
+  var t12   = composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=12 && m<15; }).length;
+  var t10   = composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=10 && m<12; }).length;
+  var t8    = composants.filter(function(s){ var m=cepNotes[s.id]._moy||0; return m>=8  && m<10; }).length;
+  var tInf8 = composants.filter(function(s){ return (cepNotes[s.id]._moy||0) < 8; }).length;
+
+  var matStats = {};
+  CEP_MATIERES.forEach(function(m) {
+    var notes = composants.map(function(s){ return cepNotes[s.id][m]; }).filter(function(n){ return n !== null; });
+    var reussites = notes.filter(function(n){ return n >= 10; }).length;
+    var notesG = masculins.map(function(s){ return cepNotes[s.id][m]; }).filter(function(n){ return n !== null; });
+    var notesF = feminins.map(function(s){ return cepNotes[s.id][m]; }).filter(function(n){ return n !== null; });
+    matStats[m] = {
+      moy: notes.length ? avg(notes).toFixed(2) : '\u2014',
+      pct: notes.length ? ((reussites/notes.length)*100).toFixed(1) : '0',
+      rG: notesG.filter(function(n){ return n>=10; }).length,
+      rF: notesF.filter(function(n){ return n>=10; }).length,
+      cG: notesG.length, cF: notesF.length,
+      label: CEP_MAT_LABELS[m]
+    };
+  });
+
+  var matsParReussite = CEP_MATIERES.slice().sort(function(a,b){ return parseFloat(matStats[b].pct)-parseFloat(matStats[a].pct); });
+  var meilleuresMats = matsParReussite.slice(0,2).map(function(m){ return matStats[m].label+' ('+matStats[m].pct+'%)'; }).join(', ');
+  var plusFaiblesMats = matsParReussite.slice(-2).reverse().map(function(m){ return matStats[m].label+' ('+matStats[m].pct+'%)'; }).join(', ');
+
+  var ecolesData = {};
+  composants.forEach(function(s) {
+    var ec = s.ecole;
+    if (!ecolesData[ec]) ecolesData[ec] = { total:0, admis:0, moys:[] };
+    ecolesData[ec].total++;
+    if (cepNotes[s.id].seuilAtteint) ecolesData[ec].admis++;
+    if (cepNotes[s.id]._moy !== null) ecolesData[ec].moys.push(cepNotes[s.id]._moy);
+  });
+  var ecolesSorted = Object.keys(ecolesData).sort(function(a,b){
+    var pA = ecolesData[a].total ? ecolesData[a].admis/ecolesData[a].total : 0;
+    var pB = ecolesData[b].total ? ecolesData[b].admis/ecolesData[b].total : 0;
+    return pB - pA;
+  });
+
+  var pctReussite = tComp ? ((admisAll.length/tComp)*100).toFixed(1) : '0';
+  var pctG = masculins.length ? ((admisG.length/masculins.length)*100).toFixed(1) : '0';
+  var pctF = feminins.length ? ((admisF.length/feminins.length)*100).toFixed(1) : '0';
+  var pctAbs = tIns ? ((tAbs/tIns)*100).toFixed(1) : '0';
+  var pctPartic = (tComp && tIns) ? ((tComp/tIns)*100).toFixed(1) : '0';
+  var annee = document.getElementById('cep-annee').value || '2025-2026';
+  var centre = document.getElementById('cep-centre').value || 'ce centre';
+  var diffGenre = parseFloat(pctG) - parseFloat(pctF);
+
+  var genreAnalyse = diffGenre > 5
+    ? 'Les gar\u00e7ons surpassent les filles avec un \u00e9cart de '+diffGenre.toFixed(1)+' points ('+pctG+'% contre '+pctF+'%). Ce d\u00e9s\u00e9quilibre m\u00e9rite une attention particuli\u00e8re lors de l\'accompagnement diff\u00e9renci\u00e9 des apprenantes.'
+    : diffGenre < -5
+    ? 'Les filles surpassent les gar\u00e7ons avec un \u00e9cart de '+Math.abs(diffGenre).toFixed(1)+' points ('+pctF+'% contre '+pctG+'%). Ce r\u00e9sultat t\u00e9moigne d\'un engagement f\u00e9minin remarquable.'
+    : 'La parit\u00e9 de r\u00e9ussite est quasi \u00e9quilibr\u00e9e entre gar\u00e7ons ('+pctG+'%) et filles ('+pctF+'%), signe d\'une \u00e9quit\u00e9 p\u00e9dagogique satisfaisante.';
+
+  var qualitative = parseFloat(pctReussite) >= 75
+    ? 'Les r\u00e9sultats sont excellents et t\u00e9moignent d\'une ma\u00eetrise solide des comp\u00e9tences \u00e9valu\u00e9es par l\'ensemble des candidats.'
+    : parseFloat(pctReussite) >= 50
+    ? 'Les r\u00e9sultats sont satisfaisants dans l\'ensemble, bien que des efforts compl\u00e9mentaires restent n\u00e9cessaires pour renforcer les acquis des candidats en difficult\u00e9.'
+    : parseFloat(pctReussite) >= 30
+    ? 'Les r\u00e9sultats restent insuffisants. Des mesures de rem\u00e9diation p\u00e9dagogique s\'imposent pour mieux pr\u00e9parer les candidats aux apprentissages fondamentaux.'
+    : 'Les r\u00e9sultats sont pr\u00e9occupants. Une analyse approfondie des pratiques p\u00e9dagogiques et un plan d\'urgence de rem\u00e9diation sont fortement recommand\u00e9s.';
+
+  var absenceAnalyse = tAbs > 0
+    ? tAbs+' candidat(s) ('+pctAbs+'% des inscrits) n\'ont pas compos\u00e9. Ce taux d\'absent\u00e9isme doit \u00eatre investigu\u00e9 et trait\u00e9 comme un indicateur de d\u00e9crochage potentiel.'
+    : 'Tous les candidats inscrits ont compos\u00e9. Le taux de participation est de 100%, ce qui est tr\u00e8s encourageant.';
+
+  // Build HTML strings safely (no nested template literals)
+  var B = 'border:1px solid #e0e0e0;';
+  var bc = 'border:1px solid #c5cae9;';
+
+  // Tranches
+  var tranchesData = [
+    {label:'Tr\u00e8s bien (\u2265 15)', n:t15, color:'#1b5e20', bg:'#e8f5e9'},
+    {label:'Bien (12 \u2013 14,99)', n:t12, color:'#1565c0', bg:'#e3f2fd'},
+    {label:'Passable (10 \u2013 11,99)', n:t10, color:'#4caf50', bg:'#f1f8e9'},
+    {label:'Insuffisant (8 \u2013 9,99)', n:t8, color:'#e65100', bg:'#fff3e0'},
+    {label:'Tr\u00e8s insuffisant (< 8)', n:tInf8, color:'#b71c1c', bg:'#ffebee'}
+  ];
+  var trancheHtml = '';
+  tranchesData.forEach(function(t) {
+    var pct = tComp ? ((t.n/tComp)*100).toFixed(1) : '0';
+    var bw = Math.max(2, parseFloat(pct));
+    trancheHtml += '<tr style="background:'+t.bg+';">' +
+      '<td style="padding:6px 10px;'+B+'color:'+t.color+';font-weight:bold;">'+t.label+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;font-weight:bold;color:'+t.color+';">'+t.n+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;font-weight:bold;color:'+t.color+';">'+pct+'%</td>' +
+      '<td style="padding:6px;'+B+'"><div style="height:14px;background:'+t.color+';border-radius:3px;width:'+Math.min(bw,100)+'%;min-width:4px;"></div></td></tr>';
+  });
+
+  // Matières
+  var matHtml = '';
+  CEP_MATIERES.forEach(function(m) {
+    var st = matStats[m];
+    var pct = parseFloat(st.pct);
+    var color = pct>=75?'#1b5e20':pct>=50?'#1565c0':'#b71c1c';
+    var bg = pct>=75?'#e8f5e9':pct>=50?'#e3f2fd':'#ffebee';
+    matHtml += '<tr style="background:'+bg+';">' +
+      '<td style="padding:6px 10px;'+B+'font-weight:bold;">'+st.label+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;">'+st.moy+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;">'+st.rG+'/'+st.cG+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;">'+st.rF+'/'+st.cF+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;font-weight:bold;color:'+color+';">'+st.pct+'%</td></tr>';
+  });
+
+  // Ecoles
+  var ecoleHtml = '';
+  ecolesSorted.forEach(function(ec, i) {
+    var d = ecolesData[ec];
+    var pct = d.total ? ((d.admis/d.total)*100).toFixed(1) : '0';
+    var moyEc = d.moys.length ? avg(d.moys).toFixed(2) : '\u2014';
+    var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1)+'.';
+    var pctColor = parseFloat(pct)>=50?'#1b5e20':'#c62828';
+    ecoleHtml += '<tr>' +
+      '<td style="padding:6px 10px;'+B+'">'+medal+' '+ec+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;">'+d.total+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;color:#2e7d32;font-weight:bold;">'+d.admis+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;">'+moyEc+'</td>' +
+      '<td style="padding:6px;'+B+'text-align:center;font-weight:bold;color:'+pctColor+';">'+pct+'%</td></tr>';
+  });
+
+  // Recommandation genre
+  var liGenre = Math.abs(diffGenre) > 5
+    ? '<li>Mettre en place un <strong>soutien diff\u00e9renci\u00e9 selon le genre</strong> pour r\u00e9duire l\'\u00e9cart de '+Math.abs(diffGenre).toFixed(1)+' points observ\u00e9 entre gar\u00e7ons et filles.</li>'
+    : '<li>Maintenir les pratiques d\'\u00e9quit\u00e9 de genre qui ont produit des r\u00e9sultats \u00e9quilibr\u00e9s entre gar\u00e7ons et filles.</li>';
+
+  var liAbsence = tAbs > 0
+    ? '<li>Investiguer les <strong>'+tAbs+' cas d\'absent\u00e9isme</strong> pour identifier les facteurs socio-\u00e9conomiques ou psychologiques sous-jacents et mettre en place un suivi personnalis\u00e9.</li>'
+    : '';
+
+  container.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;">' +
+      '<div style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;border-radius:8px;padding:14px;text-align:center;">' +
+        '<div style="font-size:28px;font-weight:bold;">'+pctReussite+'%</div>' +
+        '<div style="font-size:12px;opacity:.85;">Taux de r\u00e9ussite global</div>' +
+        '<div style="font-size:11px;opacity:.7;">'+admisAll.length+' / '+tComp+' composants</div></div>' +
+      '<div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border-radius:8px;padding:14px;text-align:center;">' +
+        '<div style="font-size:28px;font-weight:bold;">'+moyGlob+'</div>' +
+        '<div style="font-size:12px;opacity:.85;">Moyenne g\u00e9n\u00e9rale /20</div>' +
+        '<div style="font-size:11px;opacity:.7;">Max: '+maxMoy+' \u00b7 Min: '+minMoy+'</div></div>' +
+      '<div style="background:linear-gradient(135deg,#4a148c,#6a1b9a);color:#fff;border-radius:8px;padding:14px;text-align:center;">' +
+        '<div style="font-size:28px;font-weight:bold;">'+tIns+'</div>' +
+        '<div style="font-size:12px;opacity:.85;">Candidats inscrits</div>' +
+        '<div style="font-size:11px;opacity:.7;">'+tComp+' composants \u00b7 '+tAbs+' absent(s)</div></div>' +
+    '</div>' +
+
+    '<div style="background:#f3e5f5;border-left:4px solid #7b1fa2;border-radius:6px;padding:14px;margin-bottom:16px;">' +
+      '<div style="font-weight:bold;color:#4a148c;margin-bottom:8px;font-size:13px;">\uD83D\uDCCA I. ANALYSE QUANTITATIVE</div>' +
+      '<p style="margin:0 0 6px;font-size:13px;line-height:1.6;">Sur les <strong>'+tIns+'</strong> candidats inscrits au centre <strong>'+centre+'</strong> pour l\'ann\u00e9e <strong>'+annee+'</strong>, <strong>'+tComp+'</strong> ont effectivement compos\u00e9, soit un taux de participation de <strong>'+pctPartic+'%</strong>. '+absenceAnalyse+'</p>' +
+      '<p style="margin:0;font-size:13px;line-height:1.6;">Parmi les composants, <strong>'+admisAll.length+'</strong> ont atteint le seuil de r\u00e9ussite (\u22656 mati\u00e8res sur 9 avec note \u226510), repr\u00e9sentant <strong>'+pctReussite+'%</strong>. La moyenne g\u00e9n\u00e9rale s\'\u00e9tablit \u00e0 <strong>'+moyGlob+'/20</strong>, note maximale\u00a0: <strong>'+maxMoy+'</strong>, minimale\u00a0: <strong>'+minMoy+'</strong>.</p>' +
+    '</div>' +
+
+    '<div style="background:#e8f5e9;border-left:4px solid #2e7d32;border-radius:6px;padding:14px;margin-bottom:16px;">' +
+      '<div style="font-weight:bold;color:#1b5e20;margin-bottom:8px;font-size:13px;">\uD83C\uDF93 II. ANALYSE QUALITATIVE</div>' +
+      '<p style="margin:0 0 10px;font-size:13px;line-height:1.6;">'+qualitative+'</p>' +
+      '<div style="font-size:12px;font-weight:bold;color:#1b5e20;margin-bottom:6px;">R\u00e9partition par tranches de moyennes\u00a0:</div>' +
+      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+        '<thead><tr style="background:#2e7d32;color:#fff;">' +
+          '<th style="padding:6px 10px;border:1px solid #c8e6c9;text-align:left;">Tranche</th>' +
+          '<th style="padding:6px;border:1px solid #c8e6c9;">Nb</th>' +
+          '<th style="padding:6px;border:1px solid #c8e6c9;">%</th>' +
+          '<th style="padding:6px;border:1px solid #c8e6c9;min-width:80px;">Repr\u00e9sentation</th>' +
+        '</tr></thead><tbody>'+trancheHtml+'</tbody></table></div>' +
+    '</div>' +
+
+    '<div style="background:#e3f2fd;border-left:4px solid #1565c0;border-radius:6px;padding:14px;margin-bottom:16px;">' +
+      '<div style="font-weight:bold;color:#0d47a1;margin-bottom:8px;font-size:13px;">\u2640\uFE0F\u2642\uFE0F III. ANALYSE GENR\u00c9E</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+        '<div style="background:#fff;border-radius:6px;padding:10px;text-align:center;border:1px solid #90caf9;">' +
+          '<div style="font-size:20px;font-weight:bold;color:#1565c0;">'+pctG+'%</div>' +
+          '<div style="font-size:12px;color:#555;">Taux r\u00e9ussite Gar\u00e7ons</div>' +
+          '<div style="font-size:11px;color:#888;">'+admisG.length+'/'+masculins.length+' \u00b7 Moy: '+moyGarcons+'</div></div>' +
+        '<div style="background:#fff;border-radius:6px;padding:10px;text-align:center;border:1px solid #f48fb1;">' +
+          '<div style="font-size:20px;font-weight:bold;color:#c2185b;">'+pctF+'%</div>' +
+          '<div style="font-size:12px;color:#555;">Taux r\u00e9ussite Filles</div>' +
+          '<div style="font-size:11px;color:#888;">'+admisF.length+'/'+feminins.length+' \u00b7 Moy: '+moyFilles+'</div></div>' +
+      '</div>' +
+      '<p style="margin:0;font-size:13px;line-height:1.6;">'+genreAnalyse+'</p>' +
+    '</div>' +
+
+    '<div style="background:#fff8e1;border-left:4px solid #f57f17;border-radius:6px;padding:14px;margin-bottom:16px;">' +
+      '<div style="font-weight:bold;color:#e65100;margin-bottom:8px;font-size:13px;">\uD83D\uDCDA IV. ANALYSE PAR MATI\u00c8RE</div>' +
+      '<p style="margin:0 0 10px;font-size:13px;line-height:1.6;">Points forts\u00a0: <strong>'+meilleuresMats+'</strong>. Points \u00e0 renforcer\u00a0: <strong>'+plusFaiblesMats+'</strong>.</p>' +
+      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+        '<thead><tr style="background:#f57f17;color:#fff;">' +
+          '<th style="padding:6px 10px;border:1px solid #ffe082;text-align:left;">Mati\u00e8re</th>' +
+          '<th style="padding:6px;border:1px solid #ffe082;">Moy/20</th>' +
+          '<th style="padding:6px;border:1px solid #ffe082;">R\u00e9ussites G</th>' +
+          '<th style="padding:6px;border:1px solid #ffe082;">R\u00e9ussites F</th>' +
+          '<th style="padding:6px;border:1px solid #ffe082;">% R\u00e9ussite</th>' +
+        '</tr></thead><tbody>'+matHtml+'</tbody></table></div>' +
+    '</div>' +
+
+    '<div style="background:#e8eaf6;border-left:4px solid #3949ab;border-radius:6px;padding:14px;margin-bottom:16px;">' +
+      '<div style="font-weight:bold;color:#1a237e;margin-bottom:8px;font-size:13px;">\uD83C\uDFEB V. CLASSEMENT DES \u00c9COLES</div>' +
+      '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+        '<thead><tr style="background:#3949ab;color:#fff;">' +
+          '<th style="padding:6px 10px;'+bc+'text-align:left;">\u00c9cole</th>' +
+          '<th style="padding:6px;'+bc+'">Composants</th>' +
+          '<th style="padding:6px;'+bc+'">Admis</th>' +
+          '<th style="padding:6px;'+bc+'">Moy. \u00e9cole</th>' +
+          '<th style="padding:6px;'+bc+'">% R\u00e9ussite</th>' +
+        '</tr></thead><tbody>'+ecoleHtml+'</tbody></table></div>' +
+    '</div>' +
+
+    '<div style="background:#fce4ec;border-left:4px solid #c2185b;border-radius:6px;padding:14px;">' +
+      '<div style="font-weight:bold;color:#880e4f;margin-bottom:8px;font-size:13px;">\uD83D\uDCA1 VI. RECOMMANDATIONS PSYCHOP\u00c9DAGOGIQUES</div>' +
+      '<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;">' +
+        '<li>Organiser des <strong>s\u00e9ances de rem\u00e9diation cibl\u00e9es</strong> sur\u00a0: <strong>'+plusFaiblesMats+'</strong>, en petits groupes diff\u00e9renci\u00e9s.</li>' +
+        '<li>Valoriser les <strong>bonnes pratiques</strong> des \u00e9coles les mieux class\u00e9es et organiser des \u00e9changes inter-\u00e9tablissements.</li>' +
+        liAbsence +
+        liGenre +
+        '<li>Renforcer la <strong>pr\u00e9paration m\u00e9thodologique</strong>\u00a0: gestion du temps, lecture des consignes, strat\u00e9gies de r\u00e9vision.</li>' +
+        '<li>Planifier un <strong>bilan formatif</strong> collectif avec les enseignants avant le CEP officiel.</li>' +
+      '</ul>' +
+    '</div>';
+}
+
 </script>
 
 </body>
