@@ -2263,12 +2263,12 @@ async function exportPDF() {
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  const ddemp = document.getElementById('ddemp').value || '—';
-  const cs = document.getElementById('cs').value || '—';
-  const epp = document.getElementById('epp').value || '—';
-  const cours = document.getElementById('cours').value || '—';
-  const etape = document.getElementById('etape').value || '—';
-  const annee = document.getElementById('annee').value || '—';
+  const ddemp = document.getElementById('ddemp').value || '-';
+  const cs = document.getElementById('cs').value || '-';
+  const epp = document.getElementById('epp').value || '-';
+  const cours = document.getElementById('cours').value || '-';
+  const etape = document.getElementById('etape').value || '-';
+  const annee = document.getElementById('annee').value || '-';
 
   doc.text(`DDEMP : ${ddemp}`, 10, 30);
   doc.text(`CS : ${cs}`, 10, 36);
@@ -2374,10 +2374,10 @@ async function exportPDF() {
 
   const statsLines = [
     `Inscrits : ${s.inscrits}   |   Composants : ${s.composants} (${fmt(s.composants/s.inscrits*100)}%)   |   Absents : ${s.absents}`,
-    `Taux de réussite — Ensemble : ${fmt(s.pctReussite)}%  |  G : ${fmt(s.pctReussiteG)}%  |  F : ${fmt(s.pctReussiteF)}%`,
-    `Taux d'échec — Ensemble : ${fmt(s.pctEchec)}%  |  G : ${fmt(s.pctEchecG)}%  |  F : ${fmt(s.pctEchecF)}%`,
+    `Taux de réussite - Ensemble : ${fmt(s.pctReussite)}%  |  G : ${fmt(s.pctReussiteG)}%  |  F : ${fmt(s.pctReussiteF)}%`,
+    `Taux d'echec - Ensemble : ${fmt(s.pctEchec)}%  |  G : ${fmt(s.pctEchecG)}%  |  F : ${fmt(s.pctEchecF)}%`,
     `Moy. classe : ${fmt(s.moyClass)}/20  |  G : ${fmt(s.moyG)}  |  F : ${fmt(s.moyF)}  (Écart G-F : ${fmt(Math.abs(s.moyG-s.moyF))} pts)`,
-    `Répartition : ≥15 (${s.r15})  12-14 (${s.r12})  10-11 (${s.r10})  <10 (${s.rInf10})  <8 (${s.rInf8})`,
+    `Répartition : >=15 (${s.r15})  12-14 (${s.r12})  10-11 (${s.r10})  <10 (${s.rInf10})  <8 (${s.rInf8})`,
     `Mat. forte ensemble : ${s.mfEns}  |  Mat. faible ensemble : ${s.mwEns}`,
     `Mat. forte G : ${s.mfG}  |  Mat. faible G : ${s.mwG}`,
     `Mat. forte F : ${s.mfF}  |  Mat. faible F : ${s.mwF}`,
@@ -2541,7 +2541,7 @@ async function exportPDF() {
     doc.setTextColor(201,151,44);
     doc.setFontSize(7);
     
-  let footerTxt = `GESTIONNAIRE D'ÉVALUATION 3.0 · By MAÎTRE MARIANO · ${epp} · ${cours} · Étape ${etape} · ${annee} · Imprimé le ${printDT}  — Page ${p}/${totalPages}`;
+  let footerTxt = `GESTIONNAIRE D'EVALUATION 3.0 · By MAITRE MARIANO · ${epp} · ${cours} · Etape ${etape} · ${annee} · Imprime le ${printDT}  - Page ${p}/${totalPages}`;
   doc.text(footerTxt, W/2, doc.internal.pageSize.getHeight()-3, {align:'center'});
   let ftw = doc.getTextWidth(footerTxt);
   doc.rect(W/2 - ftw/2 - 4, doc.internal.pageSize.getHeight()-4.5, 1.2, 1.2, 'F');
