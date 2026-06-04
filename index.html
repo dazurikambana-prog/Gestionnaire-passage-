@@ -1048,7 +1048,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -1088,7 +1087,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="tab" onclick="showTab('analyse',this)">③ Analyse & Rapport</div>
     <div class="tab" onclick="showTab('passage',this)">④ Bilan de Passage</div>
     <div class="tab" onclick="showTab('cep',this)">⑤ Examen Blanc CEP</div>
-    <div class="tab" onclick="showTab('pdfJson',this)">⑥ PDF vers JSON</div>
+    <div class="tab" onclick="showTab('pdfCsv',this)">⑥ Conversion 3.0</div>
+    <div class="tab" onclick="showTab('releveNotesCep',this)">⑦ Relevé de Notes CEP</div>
   </div>
 
   <!-- ═══════ TAB 1 : SAISIE ═══════ -->
@@ -1726,67 +1726,168 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     </div>
   </div><!-- fin tab-cep -->
 
-  <!-- ═══════ TAB 6 : PDF → JSON ═══════ -->
-  <div class="tab-content" id="tab-pdfJson">
-    <div class="card">
-      <div class="card-header">📄 Conversion PDF → JSON (Extraction candidats)</div>
-      <div class="card-body">
+  <!-- ═══════ TAB 6 : CONVERSION 3.0 ═══════ -->
+  <div class="tab-content" id="tab-pdfCsv">
+    <div style="padding:18px;">
 
-        <div class="info-banner">
-          ℹ️ <span>Importez un PDF de liste de candidats, cliquez sur <strong>Transformer</strong> pour extraire les données, puis <strong>Exporter en JSON</strong> pour télécharger le fichier.</span>
+      <!-- EN-TÊTE -->
+      <div style="background:linear-gradient(135deg,#0d47a1,#1565c0);color:#fff;border-radius:10px;padding:18px 22px;margin-bottom:18px;">
+        <div style="font-size:18px;font-weight:bold;text-align:center;letter-spacing:1px;margin-bottom:6px;">📊 CONVERSION 3.0 — EXTRACTION DES CANDIDATS</div>
+        <div style="font-size:12px;text-align:center;opacity:.85;">Importez une liste de candidats en PDF · Extraction automatique · Export CSV &amp; Excel propres</div>
+      </div>
+
+      <!-- ZONE IMPORT -->
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:22px;margin-bottom:16px;">
+        <div style="font-weight:bold;color:#0d47a1;font-size:14px;margin-bottom:16px;border-bottom:2px solid #e3f2fd;padding-bottom:8px;">📂 Sélection du fichier PDF</div>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px;">
+          <label for="pdfCsvInput" style="display:inline-flex;align-items:center;gap:8px;background:#e3f2fd;border:2px dashed #1565c0;border-radius:8px;padding:12px 20px;cursor:pointer;font-weight:600;color:#0d47a1;font-size:14px;transition:background .2s;">
+            📁 Choisir un fichier PDF
+            <input type="file" id="pdfCsvInput" accept=".pdf,application/pdf" style="display:none;" onchange="pdfCsvOnFileChange(this)">
+          </label>
+          <div id="pdfCsv-filename" style="font-size:13px;color:#555;font-style:italic;">Aucun fichier sélectionné</div>
         </div>
 
-        <!-- Zone d'import -->
-        <div style="background:#f0f4ff;border:2px dashed #90caf9;border-radius:10px;padding:28px;text-align:center;margin-bottom:22px;transition:background 0.2s;" id="pdf-drop-zone">
-          <div style="font-size:36px;margin-bottom:10px;">📂</div>
-          <div style="font-size:15px;font-weight:600;color:#1a4731;margin-bottom:6px;">Glissez-déposez votre PDF ici</div>
-          <div style="font-size:12px;color:#888;margin-bottom:14px;">ou cliquez sur le bouton ci-dessous</div>
-          <input type="file" id="pdfJsonInput" accept=".pdf" style="display:none;" onchange="pdfJsonOnFile(this)">
-          <button class="btn btn-primary" onclick="document.getElementById('pdfJsonInput').click()">📥 Importer un fichier PDF</button>
-          <div id="pdf-file-info" style="margin-top:12px;font-size:13px;color:var(--vert);font-weight:600;font-family:'Courier New',monospace;"></div>
-        </div>
-
-        <!-- Boutons action -->
-        <div class="btn-row">
-          <button class="btn btn-primary" id="btn-transformer" onclick="pdfJsonTransformer()" disabled>⚙️ Transformer</button>
-          <button class="btn btn-gold" id="btn-export-json" onclick="pdfJsonExporter()" disabled>⬇ Exporter en JSON</button>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <button id="pdfCsv-btn-analyser" onclick="pdfCsvAnalyser()" disabled
+            style="background:#0d47a1;color:#fff;border:none;padding:10px 24px;border-radius:7px;font-weight:bold;font-size:14px;cursor:not-allowed;opacity:.5;transition:all .2s;">
+            🔍 Analyser
+          </button>
+          <button id="pdfCsv-btn-dl" onclick="pdfCsvTelecharger()" disabled
+            style="background:#1b5e20;color:#fff;border:none;padding:10px 24px;border-radius:7px;font-weight:bold;font-size:14px;cursor:not-allowed;opacity:.5;transition:all .2s;">
+            ⬇ Télécharger CSV
+          </button>
+          <button id="pdfCsv-btn-excel" onclick="pdfCsvTelechargerExcel()" disabled
+            style="background:#1b7e3a;color:#fff;border:none;padding:10px 24px;border-radius:7px;font-weight:bold;font-size:14px;cursor:not-allowed;opacity:.5;transition:all .2s;">
+            📊 Télécharger Excel
+          </button>
+          <button id="pdfCsv-btn-cep" onclick="pdfCsvImporterVersCEP()" disabled
+            style="background:#e65100;color:#fff;border:none;padding:10px 24px;border-radius:7px;font-weight:bold;font-size:14px;cursor:not-allowed;opacity:.5;transition:all .2s;">
+            🚀 Importer vers Onglet 5
+          </button>
+          <button onclick="pdfCsvReset()"
+            style="background:#e0e0e0;color:#333;border:none;padding:10px 18px;border-radius:7px;font-weight:bold;font-size:13px;cursor:pointer;">
+            🗑 Réinitialiser
+          </button>
         </div>
 
         <!-- Barre de progression -->
-        <div id="pdf-progress-wrap" style="display:none;margin-bottom:18px;">
-          <div style="font-size:12px;color:var(--vert);font-family:'Courier New',monospace;margin-bottom:4px;" id="pdf-progress-label">Analyse en cours…</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" id="pdf-progress-bar" style="width:0%"></div></div>
-        </div>
-
-        <!-- Zone de résultat -->
-        <div id="pdf-result-zone" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
-            <strong style="font-size:13px;color:var(--vert);font-family:'Courier New',monospace;">CANDIDATS EXTRAITS</strong>
-            <span id="pdf-count-badge" style="background:var(--or);color:var(--vert);padding:3px 12px;border-radius:10px;font-weight:bold;font-size:12px;font-family:'Courier New',monospace;">0 candidat(s)</span>
+        <div id="pdfCsv-progress-wrap" style="display:none;margin-top:16px;">
+          <div style="font-size:12px;color:#555;margin-bottom:6px;" id="pdfCsv-progress-label">Lecture en cours...</div>
+          <div style="background:#e3f2fd;border-radius:6px;height:10px;overflow:hidden;">
+            <div id="pdfCsv-progress-bar" style="height:100%;background:linear-gradient(90deg,#1565c0,#0d47a1);width:0%;transition:width .3s;border-radius:6px;"></div>
           </div>
-          <div class="table-wrap" style="max-height:420px;overflow-y:auto;">
-            <table style="min-width:700px;">
+        </div>
+      </div>
+
+      <!-- RÉSULTATS -->
+      <div id="pdfCsv-results-wrap" style="display:none;">
+
+        <!-- Statistiques rapides -->
+        <div id="pdfCsv-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;"></div>
+
+        <!-- Tableau aperçu -->
+        <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden;margin-bottom:16px;">
+          <div style="background:#0d47a1;color:#fff;padding:11px 18px;font-weight:bold;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+            <span>📋 APERÇU DES CANDIDATS EXTRAITS</span>
+            <span id="pdfCsv-count-badge" style="background:rgba(255,255,255,.2);padding:3px 10px;border-radius:12px;font-size:12px;"></span>
+          </div>
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;" id="pdfCsv-preview-table">
               <thead>
-                <tr>
-                  <th style="width:60px;">N° Table</th>
-                  <th style="text-align:left;min-width:200px;padding-left:10px;">Nom et Prénoms</th>
-                  <th style="width:60px;">Sexe</th>
-                  <th style="text-align:left;min-width:180px;padding-left:10px;">École de Provenance</th>
+                <tr style="background:#e3f2fd;position:sticky;top:0;">
+                  <th style="padding:8px 10px;border:1px solid #bbdefb;text-align:center;color:#0d47a1;">#</th>
+                  <th style="padding:8px 10px;border:1px solid #bbdefb;text-align:center;color:#0d47a1;">numero_table</th>
+                  <th style="padding:8px 10px;border:1px solid #bbdefb;text-align:left;color:#0d47a1;">nom_prenoms</th>
+                  <th style="padding:8px 10px;border:1px solid #bbdefb;text-align:center;color:#0d47a1;">sexe</th>
+                  <th style="padding:8px 10px;border:1px solid #bbdefb;text-align:left;color:#0d47a1;">ecole_provenance</th>
                 </tr>
               </thead>
-              <tbody id="pdf-result-body"></tbody>
+              <tbody id="pdfCsv-preview-body"></tbody>
             </table>
           </div>
         </div>
 
-        <!-- Message vide -->
-        <div id="pdf-empty-msg" style="text-align:center;padding:40px;color:#aaa;font-style:italic;font-size:14px;">
-          Aucune donnée — importez un PDF et cliquez sur <strong>Transformer</strong>.
-        </div>
-
       </div>
+
+      <!-- Message état vide -->
+      <div id="pdfCsv-empty-msg" style="text-align:center;padding:50px 20px;color:#aaa;">
+        <div style="font-size:48px;margin-bottom:12px;">📊</div>
+        <div style="font-size:15px;font-weight:bold;color:#888;margin-bottom:8px;">Aucun fichier chargé</div>
+        <div style="font-size:13px;">Sélectionnez un fichier PDF contenant la liste des candidats, puis cliquez sur <strong>Analyser</strong>.</div>
+      </div>
+
     </div>
-  </div><!-- fin tab-pdfJson -->
+  </div><!-- fin tab-pdfCsv -->
+
+  <!-- ═══════ TAB 7 : RELEVÉ DE NOTES CEP ═══════ -->
+  <div class="tab-content" id="tab-releveNotesCep">
+    <div style="padding:18px;">
+
+      <!-- EN-TÊTE -->
+      <div style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border-radius:10px;padding:18px 22px;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:bold;text-align:center;letter-spacing:1px;margin-bottom:6px;">📄 RELEVÉ DE NOTES CEP — GÉNÉRATION PDF</div>
+        <div style="text-align:center;font-size:12px;opacity:.8;">Les données sont lues directement depuis l'Onglet ⑤ (Examen Blanc CEP) — aucune ressaisie nécessaire.</div>
+      </div>
+
+      <!-- ALERTE SI AUCUN CANDIDAT -->
+      <div id="releve-alerte-vide" style="display:none;background:#fff3e0;border:1px solid #ffe082;border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:#e65100;">
+        ⚠️ <strong>Aucun candidat trouvé.</strong> Veuillez d'abord importer la liste et saisir les notes dans l'onglet ⑤ Examen Blanc CEP.
+      </div>
+
+      <!-- SECTION : SIGNATURE DIGITALE -->
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+        <div style="background:#37474f;color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">✍️ Signature digitale du Chef de Centre</div>
+        <div style="padding:18px;">
+          <div style="font-size:13px;color:#555;margin-bottom:12px;">Dessinez votre signature <strong>une seule fois</strong> dans le cadre ci-dessous (souris ou doigt). Elle sera automatiquement apposée sur tous les relevés générés.</div>
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+            <div>
+              <canvas id="releve-sig-canvas" width="360" height="120"
+                style="border:2px solid #90a4ae;border-radius:8px;background:#fafafa;cursor:crosshair;touch-action:none;display:block;">
+              </canvas>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button onclick="releveEffacerSignature()" style="background:#ef5350;color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;">🗑️ Effacer</button>
+                <button onclick="releveEnregistrerSignature()" style="background:#43a047;color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;">💾 Enregistrer la signature</button>
+              </div>
+            </div>
+            <div style="flex:1;min-width:200px;">
+              <div style="font-size:12px;color:#777;margin-bottom:6px;">Aperçu de la signature enregistrée :</div>
+              <div id="releve-sig-preview" style="border:1px dashed #bbb;border-radius:6px;padding:8px;background:#f9f9f9;min-height:80px;display:flex;align-items:center;justify-content:center;">
+                <span style="color:#bbb;font-style:italic;font-size:12px;">Aucune signature enregistrée</span>
+              </div>
+              <div id="releve-sig-status" style="margin-top:6px;font-size:12px;color:#888;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION : GÉNÉRATION INDIVIDUELLE -->
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+        <div style="background:#1565c0;color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">👤 Relevé individuel — Un seul candidat</div>
+        <div style="padding:18px;">
+          <div style="font-size:13px;color:#555;margin-bottom:12px;">Sélectionnez un(e) candidat(e) pour générer et télécharger son relevé de notes PDF individuel.</div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <select id="releve-select-candidat" style="flex:1;min-width:280px;padding:8px 12px;border:2px solid #90caf9;border-radius:6px;font-size:13px;background:#f8fbff;">
+              <option value="">— Sélectionner un(e) candidat(e) —</option>
+            </select>
+            <button onclick="releveGenererIndividuel()" style="background:#1565c0;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">⬇ Télécharger PDF individuel</button>
+          </div>
+          <div id="releve-individuel-info" style="margin-top:10px;font-size:12px;color:#888;display:none;"></div>
+        </div>
+      </div>
+
+      <!-- SECTION : GÉNÉRATION GROUPÉE -->
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
+        <div style="background:#2e7d32;color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">📚 Relevé groupé — Tous les candidats du centre</div>
+        <div style="padding:18px;">
+          <div style="font-size:13px;color:#555;margin-bottom:12px;">Génère un fichier PDF unique contenant les relevés de notes de <strong id="releve-nb-candidats">0</strong> candidat(s). Chaque candidat occupe une page.</div>
+          <button onclick="releveGenererGroupé()" style="background:#2e7d32;color:#fff;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">⬇ Télécharger PDF groupé (tous les candidats)</button>
+          <div id="releve-groupe-info" style="margin-top:10px;font-size:12px;color:#888;display:none;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- fin tab-releveNotesCep -->
 
 </div>
 
@@ -1888,6 +1989,22 @@ function showTab(id, el) {
   el.classList.add('active');
   if (id === 'stats' || id === 'analyse') recalcAll();
 }
+
+// ═══════════════════════════════════════
+//  PDF VERS JSON — ONGLET 6
+// ═══════════════════════════════════════
+
+// Chargement de PDF.js depuis CDN
+(function() {
+  if (typeof pdfjsLib === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function() {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    };
+    document.head.appendChild(s);
+  }
+})();
 
 // ═══════════════════════════════════════
 //  HORLOGE EN DIRECT
@@ -6123,219 +6240,836 @@ function cepGenererAnalyse() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  ONGLET 6 — PDF vers JSON
-//  Stratégie : extraction texte locale via pdf.js (pas de CORS)
-//  puis envoi du TEXTE brut à l'API Anthropic (pas de binaire)
+//  ONGLET 7 — PDF VERS CSV
 // ═══════════════════════════════════════════════════════════
-(function() {
-  var _pdfFile = null;
-  var _candidats = [];
 
-  // ── Détection fichier local (content:// ou file://)
-  function _isLocalFile() {
-    var p = window.location.protocol;
-    var h = window.location.href;
-    return p === 'file:' || h.indexOf('content://') === 0 || h.indexOf('content:') === 0;
+let pdfCsvCandidats = [];
+
+function pdfCsvOnFileChange(input) {
+  const file = input.files[0];
+  const fnEl = document.getElementById('pdfCsv-filename');
+  const btnA = document.getElementById('pdfCsv-btn-analyser');
+  if (!file) {
+    fnEl.textContent = 'Aucun fichier sélectionné';
+    btnA.disabled = true;
+    btnA.style.opacity = '.5';
+    btnA.style.cursor = 'not-allowed';
+    return;
+  }
+  fnEl.textContent = '📄 ' + file.name + '  (' + (file.size / 1024).toFixed(1) + ' Ko)';
+  btnA.disabled = false;
+  btnA.style.opacity = '1';
+  btnA.style.cursor = 'pointer';
+  pdfCsvCandidats = [];
+  document.getElementById('pdfCsv-results-wrap').style.display = 'none';
+  document.getElementById('pdfCsv-empty-msg').style.display = 'block';
+  const btnDl = document.getElementById('pdfCsv-btn-dl');
+  btnDl.disabled = true;
+  btnDl.style.opacity = '.5';
+  btnDl.style.cursor = 'not-allowed';
+}
+
+async function pdfCsvAnalyser() {
+  const input = document.getElementById('pdfCsvInput');
+  if (!input.files || !input.files[0]) {
+    alert('Veuillez sélectionner un fichier PDF.');
+    return;
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    alert('La bibliothèque PDF.js n\'est pas encore chargée. Vérifiez votre connexion internet et réessayez.');
+    return;
   }
 
-  function _checkLocalWarning() {
-    var warn = document.getElementById('local-file-warning');
-    var info = document.getElementById('normal-info-banner');
-    if (_isLocalFile()) {
-      if (warn) warn.style.display = '';
-      if (info) info.style.display = 'none';
-    } else {
-      if (warn) warn.style.display = 'none';
-      if (info) info.style.display = '';
+  const file = input.files[0];
+  const progressWrap = document.getElementById('pdfCsv-progress-wrap');
+  const progressBar = document.getElementById('pdfCsv-progress-bar');
+  const progressLabel = document.getElementById('pdfCsv-progress-label');
+  const btnA = document.getElementById('pdfCsv-btn-analyser');
+
+  btnA.disabled = true;
+  btnA.style.opacity = '.6';
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '5%';
+  progressLabel.textContent = 'Lecture du fichier PDF…';
+  document.getElementById('pdfCsv-empty-msg').style.display = 'none';
+  document.getElementById('pdfCsv-results-wrap').style.display = 'none';
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    progressBar.style.width = '20%';
+    progressLabel.textContent = 'Décodage PDF…';
+
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const totalPages = pdf.numPages;
+
+    // Collecte brute de tous les items avec leur position (x, y, texte)
+    const allItems = [];
+    for (let p = 1; p <= totalPages; p++) {
+      progressBar.style.width = (20 + Math.round((p / totalPages) * 40)) + '%';
+      progressLabel.textContent = 'Lecture page ' + p + ' / ' + totalPages + '…';
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({ scale: 1 });
+      const content = await page.getTextContent();
+      const H = viewport.height;
+      content.items.forEach(item => {
+        const t = item.str ? item.str.trim() : '';
+        if (!t) return;
+        const x = item.transform[4];
+        const y = H - item.transform[5];
+        allItems.push({ x, y, text: t, page: p });
+      });
     }
-  }
 
-  // ── Configurer worker pdf.js (CDN, pas de fichier local)
-  function _initPdfJs() {
-    if (typeof pdfjsLib !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    progressBar.style.width = '65%';
+    progressLabel.textContent = 'Détection des colonnes et reconstruction des candidats…';
+
+    // ── Détecter dynamiquement les bornes X des colonnes ──
+    const TABLE_NUM_RE_D = /^\d{5,}[A-Z]\d{4,}$/i;
+    const allTableItems = allItems.filter(it => TABLE_NUM_RE_D.test(it.text));
+
+    let xNomMin = 130, xPrenomMin = 260, xSexeMin = 410, xSexeMax = 470,
+        xNatMin = 445, xDateMin = 510, xLieuMin = 570, xEcoleMin = 650;
+
+    if (allTableItems.length > 0) {
+      const sample = allTableItems[0];
+      const sameRow = allItems.filter(it => it.page === sample.page &&
+        Math.abs(it.y - sample.y) <= 6 && it.x > sample.x + 5);
+      sameRow.sort((a, b) => a.x - b.x);
+      if (sameRow.length >= 2) {
+        xNomMin = sample.x + 5;
+        xPrenomMin = sameRow[0].x + 1;
+        const sexeItem = sameRow.find(it => /^[MF]$/i.test(it.text));
+        if (sexeItem) {
+          xSexeMin = sexeItem.x - 5;
+          xSexeMax = sexeItem.x + 20;
+          xPrenomMin = sameRow[0].x + 1;
+          const prenomCandidate = sameRow.filter(it => it.x < xSexeMin && it.x >= xPrenomMin);
+          if (prenomCandidate.length) xPrenomMin = prenomCandidate[0].x - 5;
+        }
+      }
+      xNatMin  = xSexeMax + 2;
+      xDateMin = xNatMin + 55;
+      xLieuMin = xDateMin + 60;
+      xEcoleMin = xLieuMin + 70;
     }
-  }
 
-  // ── Drag & drop
-  document.addEventListener('DOMContentLoaded', function() {
-    _initPdfJs();
-    _checkLocalWarning();
-    var dz = document.getElementById('pdf-drop-zone');
-    if (!dz) return;
-    dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.style.background='#dbeafe'; });
-    dz.addEventListener('dragleave', function(){ dz.style.background=''; });
-    dz.addEventListener('drop', function(e){
-      e.preventDefault(); dz.style.background='';
-      var f = e.dataTransfer.files;
-      if (f && f[0] && f[0].name.toLowerCase().endsWith('.pdf')) _pdfSetFile(f[0]);
+    // Mots-clés en-têtes et lignes à ignorer impérativement
+    const HEADER_WORDS = /^(n°|n[o°]|nom|pr[eé]nom|sexe|nationalit[eé]|date|naissance|lieu|[eé]cole|provenance|cep\s*20|centre\s*:|d[eé]partement|circonscription|session|liste|candidat|r[eé]aliz|brouillon|page\s*\d|vendredi|lundi|mardi|mercredi|jeudi|samedi|ticsmaster|minist[eè]re|direction|r[eé]publique|fraternit[eé]|bp\s*\d|t[eé]l|contact@|sur\s*\d|total|salle\s*:|jury\s*:)$/i;
+
+    // ── Grouper les items par ligne de candidat via ancres N°Table ──
+    const tableAnchors = allTableItems.map(it => ({ y: it.y, page: it.page, text: it.text, x: it.x }));
+    tableAnchors.sort((a, b) => a.page !== b.page ? a.page - b.page : a.y - b.y);
+
+    const MAX_DIST_Y = 32;
+    const candidatMap = new Map();
+
+    allItems.forEach(item => {
+      // Ignorer explicitement les en-têtes et métadonnées
+      if (/^(BROUILLON|vendredi|lundi|mardi|mercredi|jeudi|samedi|ticsmaster|Realized|Page\s*\d|sur\s*\d|CEP\s*20|SESSION|LISTE|CANDIDATS|Centre\s*:|Département|Circonscription|Total|MINIST[ÈE]RE|Direction|République|Fraternité|BP\s*20|Tél|contact@|Date\s*de|Naissance|École\s*de|provenance|Prénom|Nationalité|N°\s*Table|Lieu\s*de)/i.test(item.text)) return;
+      // Ignorer numéros séquentiels simples
+      if (/^\d{1,3}$/.test(item.text)) return;
+      // Ignorer les mots d'en-tête isolés (N°, Nom, Sexe, École…)
+      if (HEADER_WORDS.test(item.text)) return;
+
+      const pagAnchors = tableAnchors.filter(a => a.page === item.page);
+      let bestAnchor = null, bestDist = Infinity;
+      pagAnchors.forEach(a => {
+        const d = Math.abs(a.y - item.y);
+        if (d < bestDist) { bestDist = d; bestAnchor = a; }
+      });
+      if (!bestAnchor || bestDist > MAX_DIST_Y) return;
+
+      const key = bestAnchor.text;
+      if (!candidatMap.has(key)) {
+        candidatMap.set(key, { numero_table: key, nom: [], prenom: [], sexe: '', ecole: [] });
+      }
+      const cand = candidatMap.get(key);
+      const x = item.x;
+      const t = item.text;
+
+      if (TABLE_NUM_RE_D.test(t)) return;
+
+      if (x < xPrenomMin) {
+        cand.nom.push({ x, t });
+      } else if (x < xSexeMin) {
+        cand.prenom.push({ x, y: item.y, t });
+      } else if (x <= xSexeMax && /^[MF]$/i.test(t)) {
+        cand.sexe = t.toUpperCase();
+      } else if (x >= xEcoleMin || /^(EPP|EPC|EP|CEG|CSP|GROUPE|ECOLE|COMPLEXE)\b/i.test(t) || /^\(EX\s/i.test(t)) {
+        cand.ecole.push({ x, y: item.y, t });
+      } else if (x >= xLieuMin) {
+        // lieu de naissance → ignorer
+      } else {
+        if (/^(BENIN|TOGO|BURKINA|IVOIR)/i.test(t)) return;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(t)) return;
+        if (x >= xPrenomMin && x < xSexeMin) {
+          cand.prenom.push({ x, y: item.y, t });
+        }
+      }
     });
+
+    // ── Reconstruire les candidats depuis la map ──
+    pdfCsvCandidats = [];
+    tableAnchors.forEach(anchor => {
+      const cand = candidatMap.get(anchor.text);
+      if (!cand) return;
+
+      cand.nom.sort((a, b) => a.x - b.x);
+      const nomStr = cand.nom.map(it => it.t).join(' ').trim();
+
+      cand.prenom.sort((a, b) => Math.abs(a.y - b.y) < 3 ? a.x - b.x : a.y - b.y);
+      const prenomStr = cand.prenom.map(it => it.t).join(' ').trim();
+
+      cand.ecole.sort((a, b) => Math.abs(a.y - b.y) < 3 ? a.x - b.x : a.y - b.y);
+      const ecoleStr = cand.ecole.map(it => it.t).join(' ').trim();
+
+      // Nettoyer nom_prenoms : ne jamais inclure "N°", "Nom", "Sexe", "École"
+      const HEADER_TOKEN_RE = /^(n[o°°]|nom|pr[eé]nom[s]?|sexe|[eé]cole|provenance|nationalit[eé]|date|naissance|lieu)$/i;
+      const nomPrenomsFinal = [nomStr, prenomStr]
+        .filter(Boolean)
+        .join(' ')
+        .split(/\s+/)
+        .filter(tok => !HEADER_TOKEN_RE.test(tok))
+        .join(' ')
+        .trim();
+
+      if (!nomPrenomsFinal) return;
+
+      pdfCsvCandidats.push({
+        numero_table: cand.numero_table,
+        nom_prenoms: nomPrenomsFinal,
+        sexe: cand.sexe || '?',
+        ecole_provenance: ecoleStr
+      });
+    });
+
+    progressBar.style.width = '100%';
+    progressLabel.textContent = 'Terminé — ' + pdfCsvCandidats.length + ' candidat(s) extrait(s)';
+
+    setTimeout(() => {
+      progressWrap.style.display = 'none';
+      btnA.disabled = false;
+      btnA.style.opacity = '1';
+    }, 1200);
+
+    pdfCsvAfficherResultats();
+
+  } catch (err) {
+    progressWrap.style.display = 'none';
+    btnA.disabled = false;
+    btnA.style.opacity = '1';
+    alert('Erreur lors de la lecture du PDF :\n' + err.message);
+    console.error(err);
+  }
+}
+
+function pdfCsvAfficherResultats() {
+  const wrap = document.getElementById('pdfCsv-results-wrap');
+  const emptyMsg = document.getElementById('pdfCsv-empty-msg');
+  const tbody = document.getElementById('pdfCsv-preview-body');
+  const badge = document.getElementById('pdfCsv-count-badge');
+  const statsDiv = document.getElementById('pdfCsv-stats');
+  const btnDl = document.getElementById('pdfCsv-btn-dl');
+
+  if (!pdfCsvCandidats.length) {
+    emptyMsg.style.display = 'block';
+    emptyMsg.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:bold;color:#e65100;margin-bottom:8px;">Aucun candidat extrait</div><div style="font-size:13px;color:#777;">Le format du PDF n\'a pas permis d\'identifier de données structurées.<br>Vérifiez que le PDF contient bien des numéros de table, des noms, un sexe et une école.</div>';
+    wrap.style.display = 'none';
+    return;
+  }
+
+  emptyMsg.style.display = 'none';
+  wrap.style.display = 'block';
+  badge.textContent = pdfCsvCandidats.length + ' candidat(s)';
+
+  const nbM = pdfCsvCandidats.filter(c => c.sexe === 'M').length;
+  const nbF = pdfCsvCandidats.filter(c => c.sexe === 'F').length;
+  const ecoles = [...new Set(pdfCsvCandidats.map(c => c.ecole_provenance).filter(e => e))];
+
+  statsDiv.innerHTML = [
+    { label: 'Total candidats', val: pdfCsvCandidats.length, color: '#0d47a1', bg: '#e3f2fd' },
+    { label: 'Garçons (M)',     val: nbM,                    color: '#1565c0', bg: '#e8eaf6' },
+    { label: 'Filles (F)',      val: nbF,                    color: '#c2185b', bg: '#fce4ec' },
+    { label: 'Écoles identifiées', val: ecoles.length || '—', color: '#6a1b9a', bg: '#f3e5f5' },
+  ].map(s => `<div style="background:${s.bg};border-radius:8px;padding:14px;text-align:center;border-left:4px solid ${s.color};">
+    <div style="font-size:26px;font-weight:bold;color:${s.color};">${s.val}</div>
+    <div style="font-size:11px;color:#555;">${s.label}</div>
+  </div>`).join('');
+
+  tbody.innerHTML = pdfCsvCandidats.map((c, idx) => `
+    <tr style="background:${idx % 2 === 0 ? '#fff' : '#f0f4ff'};">
+      <td style="padding:6px 8px;border:1px solid #e0e0e0;text-align:center;color:#aaa;font-size:11px;">${idx + 1}</td>
+      <td style="padding:6px 8px;border:1px solid #e0e0e0;text-align:center;font-weight:bold;color:#0d47a1;">${c.numero_table}</td>
+      <td style="padding:6px 8px;border:1px solid #e0e0e0;">${c.nom_prenoms}</td>
+      <td style="padding:6px 8px;border:1px solid #e0e0e0;text-align:center;">
+        <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;${c.sexe === 'M' ? 'background:#e3f2fd;color:#1565c0' : c.sexe === 'F' ? 'background:#fce4ec;color:#c2185b' : 'background:#f5f5f5;color:#999'};">${c.sexe || '—'}</span>
+      </td>
+      <td style="padding:6px 8px;border:1px solid #e0e0e0;font-size:12px;color:#555;">${c.ecole_provenance || '—'}</td>
+    </tr>`).join('');
+
+  btnDl.disabled = false;
+  btnDl.style.opacity = '1';
+  btnDl.style.cursor = 'pointer';
+
+  const btnExcel = document.getElementById('pdfCsv-btn-excel');
+  btnExcel.disabled = false; btnExcel.style.opacity = '1'; btnExcel.style.cursor = 'pointer';
+  const btnCep = document.getElementById('pdfCsv-btn-cep');
+  btnCep.disabled = false; btnCep.style.opacity = '1'; btnCep.style.cursor = 'pointer';
+}
+
+function pdfCsvTelecharger() {
+  if (!pdfCsvCandidats.length) { alert('Aucune donnée à exporter.'); return; }
+
+  // Construire le CSV avec BOM UTF-8 pour compatibilité Excel
+  const BOM = '\uFEFF';
+  const header = 'numero_table,nom_prenoms,sexe,ecole_provenance';
+
+  function csvEscape(val) {
+    if (val === undefined || val === null) return '';
+    const s = String(val);
+    // Si contient virgule, guillemet ou retour à la ligne → encapsuler
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  const rows = pdfCsvCandidats.map(c =>
+    [c.numero_table, c.nom_prenoms, c.sexe, c.ecole_provenance].map(csvEscape).join(',')
+  );
+
+  const csvContent = BOM + header + '\r\n' + rows.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const nomFichier = (document.getElementById('pdfCsvInput').files[0]?.name || 'candidats').replace(/\.pdf$/i, '');
+  a.download = nomFichier + '_candidats.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function pdfCsvReset() {
+  document.getElementById('pdfCsvInput').value = '';
+  document.getElementById('pdfCsv-filename').textContent = 'Aucun fichier sélectionné';
+  const btnA = document.getElementById('pdfCsv-btn-analyser');
+  btnA.disabled = true; btnA.style.opacity = '.5'; btnA.style.cursor = 'not-allowed';
+  const btnDl = document.getElementById('pdfCsv-btn-dl');
+  btnDl.disabled = true; btnDl.style.opacity = '.5'; btnDl.style.cursor = 'not-allowed';
+  const btnExcel = document.getElementById('pdfCsv-btn-excel');
+  btnExcel.disabled = true; btnExcel.style.opacity = '.5'; btnExcel.style.cursor = 'not-allowed';
+  const btnCep = document.getElementById('pdfCsv-btn-cep');
+  btnCep.disabled = true; btnCep.style.opacity = '.5'; btnCep.style.cursor = 'not-allowed';
+  pdfCsvCandidats = [];
+  document.getElementById('pdfCsv-results-wrap').style.display = 'none';
+  document.getElementById('pdfCsv-progress-wrap').style.display = 'none';
+  document.getElementById('pdfCsv-empty-msg').style.display = 'block';
+  document.getElementById('pdfCsv-empty-msg').innerHTML = '<div style="font-size:48px;margin-bottom:12px;">📊</div><div style="font-size:15px;font-weight:bold;color:#888;margin-bottom:8px;">Aucun fichier chargé</div><div style="font-size:13px;">Sélectionnez un fichier PDF contenant la liste des candidats, puis cliquez sur <strong>Analyser</strong>.</div>';
+}
+
+// ── EXPORT EXCEL (CSV séparateur ; pour Excel) ──────────────────────────────
+function pdfCsvTelechargerExcel() {
+  if (!pdfCsvCandidats.length) { alert('Aucune donnée à exporter.'); return; }
+
+  const header = ['N° Table', 'Noms et Prénoms', 'Sexe', 'École de provenance'];
+  const rows = pdfCsvCandidats.map(c => [
+    c.numero_table || '',
+    c.nom_prenoms  || '',
+    c.sexe         || '',
+    c.ecole_provenance || ''
+  ]);
+  const csv = [header, ...rows]
+    .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(';'))
+    .join('\r\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const nomFichier = (document.getElementById('pdfCsvInput').files[0]?.name || 'candidats').replace(/\.pdf$/i, '');
+  a.download = nomFichier + '_candidats_excel.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── IMPORTER VERS ONGLET 5 (CEP Blanc) ─────────────────────────────────────
+function pdfCsvImporterVersCEP() {
+  if (!pdfCsvCandidats.length) { alert('Aucune donnée à importer.'); return; }
+
+  const parsed = pdfCsvCandidats.map(function(c) {
+    return {
+      id  : c.numero_table || String(Math.random()).slice(2),
+      nom : c.nom_prenoms  || '',
+      sexe: (c.sexe || 'M').toUpperCase() === 'F' ? 'F' : 'M',
+      ecole: c.ecole_provenance || ''
+    };
+  }).filter(function(c) { return c.nom; });
+
+  if (!parsed.length) { alert('Aucun candidat valide à importer.'); return; }
+
+  if (!confirm(parsed.length + ' candidat(s) vont être importés dans l\'Onglet ⑤ (Examen Blanc CEP).\nLes notes déjà saisies seront conservées si les numéros de table correspondent.\n\nContinuer ?')) return;
+
+  const oldNotes = Object.assign({}, cepNotes || {});
+  cepStudents = parsed;
+  cepNotes    = {};
+  const matieresArr = typeof CEP_MATIERES !== 'undefined' ? CEP_MATIERES : [];
+  cepStudents.forEach(function(s) {
+    cepNotes[s.id] = oldNotes[s.id] || {};
+    matieresArr.forEach(function(m) { if (cepNotes[s.id][m] === undefined) cepNotes[s.id][m] = null; });
+    if (cepNotes[s.id].seuilAtteint === undefined) cepNotes[s.id].seuilAtteint = null;
+    if (cepNotes[s.id].aCompose    === undefined) cepNotes[s.id].aCompose    = false;
   });
 
-  window.pdfJsonOnFile = function(input) {
-    if (input.files && input.files[0]) _pdfSetFile(input.files[0]);
+  cepRenderTable();
+  if (typeof cepUpdateSyntheses === 'function') cepUpdateSyntheses();
+
+  const tabCep = document.querySelector('.tab[onclick*="cep"]');
+  if (tabCep) tabCep.click();
+
+  setTimeout(function() {
+    alert('✅ ' + parsed.length + ' candidat(s) importé(s) avec succès dans l\'Onglet ⑤ !\nVous pouvez maintenant saisir leurs notes.');
+  }, 200);
+}
+
+
+// ═══════════════════════════════════════
+//  ONGLET 7 — RELEVÉ DE NOTES CEP
+// ═══════════════════════════════════════
+
+let releveSigDataUrl = null;
+let releveIsDrawing = false;
+let releveLastX = 0;
+let releveLastY = 0;
+
+// ── Initialisation du canvas de signature ──
+function releveInitCanvas() {
+  const canvas = document.getElementById('releve-sig-canvas');
+  if (!canvas || canvas._releveInit) return;
+  canvas._releveInit = true;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a237e';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    }
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    releveIsDrawing = true;
+    const p = getPos(e);
+    releveLastX = p.x; releveLastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+  function draw(e) {
+    if (!releveIsDrawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    releveLastX = p.x; releveLastY = p.y;
+  }
+  function endDraw(e) { releveIsDrawing = false; }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
+  canvas.addEventListener('touchend', endDraw);
+}
+
+function releveEffacerSignature() {
+  const canvas = document.getElementById('releve-sig-canvas');
+  if (!canvas) return;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function releveEnregistrerSignature() {
+  const canvas = document.getElementById('releve-sig-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const hasContent = Array.from(data).some((v, i) => i % 4 === 3 && v > 0);
+  if (!hasContent) { alert('Le canvas est vide. Veuillez d\'abord dessiner votre signature.'); return; }
+  releveSigDataUrl = canvas.toDataURL('image/png');
+  const prev = document.getElementById('releve-sig-preview');
+  if (prev) {
+    prev.innerHTML = '<img src="' + releveSigDataUrl + '" style="max-width:100%;max-height:100px;object-fit:contain;" alt="Signature">';
+  }
+  const status = document.getElementById('releve-sig-status');
+  if (status) status.innerHTML = '<span style="color:#43a047;font-weight:bold;">✅ Signature enregistrée avec succès.</span>';
+}
+
+// ── Mise à jour de la liste des candidats et du compteur ──
+function releveActualiserListe() {
+  const sel = document.getElementById('releve-select-candidat');
+  const nb = document.getElementById('releve-nb-candidats');
+  const alerte = document.getElementById('releve-alerte-vide');
+  if (!sel) return;
+
+  const hasCandidats = typeof cepStudents !== 'undefined' && cepStudents.length > 0;
+  if (alerte) alerte.style.display = hasCandidats ? 'none' : 'block';
+  if (nb) nb.textContent = hasCandidats ? cepStudents.length : 0;
+
+  sel.innerHTML = '<option value="">— S\u00e9lectionner un(e) candidat(e) —</option>';
+  if (!hasCandidats) return;
+
+  cepStudents.forEach(function(s, idx) {
+    const n = cepNotes && cepNotes[s.id];
+    const moy = (n && n._moy != null) ? ' · Moy: ' + n._moy.toFixed(2) : '';
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = s.id + ' — ' + s.nom + ' (' + s.sexe + ')' + moy;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Lecture des infos du centre depuis l'onglet 5 ──
+function releveGetCepInfo() {
+  function gv(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  return {
+    depart:  gv('cep-depart'),
+    ddemp:   gv('cep-ddemp'),
+    cs:      gv('cep-cs'),
+    annee:   gv('cep-annee'),
+    commune: gv('cep-commune'),
+    centre:  gv('cep-centre'),
+    chef:    gv('cep-chef'),
+    num:     gv('cep-num'),
+    dateSig: gv('cep-date-sig')
   };
+}
 
-  function _pdfSetFile(file) {
-    _initPdfJs();
-    _pdfFile = file; _candidats = [];
-    var info = document.getElementById('pdf-file-info');
-    if (info) info.textContent = '✔ ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' Ko)';
-    document.getElementById('btn-transformer').disabled = false;
-    document.getElementById('btn-export-json').disabled = true;
-    document.getElementById('pdf-result-zone').style.display = 'none';
-    document.getElementById('pdf-empty-msg').style.display = '';
-    document.getElementById('pdf-result-body').innerHTML = '';
-    document.getElementById('pdf-count-badge').textContent = '0 candidat(s)';
-    var pw = document.getElementById('pdf-progress-wrap');
-    var pb = document.getElementById('pdf-progress-bar');
-    if (pw) pw.style.display = 'none';
-    if (pb) { pb.style.width='0%'; pb.style.background=''; }
+// ── Construction d'une page relevé dans le doc jsPDF ──
+function releveBuildPage(doc, student, info, isFirst) {
+  const W = 210, H = 297;
+  const bleuFonce = [13, 71, 161];    // #0d47a1 — en-tête / pied / résumé
+  const bleu      = [21, 101, 192];   // #1565c0 — tableau (inchangé)
+  const bleuClair = [100, 181, 246];  // #64b5f6 — bande accent
+  const creme     = [250, 246, 238];  // lignes alternées tableau
+
+  if (!isFirst) doc.addPage();
+
+  const n = (typeof cepNotes !== 'undefined' && cepNotes[student.id]) ? cepNotes[student.id] : {};
+  const totalVal = (n._total != null) ? n._total.toFixed(2) : '\u2014';
+  const moyVal   = (n._moy   != null) ? n._moy.toFixed(2)   : '\u2014';
+  const seuilOk  = n.seuilAtteint === true;
+  const seuilTxt = n.aCompose ? (seuilOk ? 'OUI' : 'NON') : '\u2014';
+  function formatRang(r, sexe) {
+    if (r == null) return '\u2014';
+    const num = parseInt(r);
+    if (isNaN(num)) return '\u2014';
+    if (num === 1) return sexe === 'F' ? '1\u00e8re' : '1er';
+    return num + '\u00e8me';
   }
+  const rang = formatRang(n._rang, student.sexe);
 
-  // ── Extraire tout le texte du PDF avec pdf.js (100% local, pas de réseau)
-  async function _extraireTextePDF(file) {
-    _initPdfJs();
-    var arrayBuffer = await file.arrayBuffer();
-    var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    var texte = '';
-    for (var i = 1; i <= pdf.numPages; i++) {
-      var page = await pdf.getPage(i);
-      var content = await page.getTextContent();
-      // Reconstituer les lignes en tenant compte des positions Y
-      var items = content.items;
-      var lastY = null;
-      for (var j = 0; j < items.length; j++) {
-        var item = items[j];
-        var y = item.transform ? item.transform[5] : 0;
-        if (lastY !== null && Math.abs(y - lastY) > 2) texte += '\n';
-        texte += item.str;
-        lastY = y;
+  // ── EN-TÊTE BLEU MODERNE ──
+  doc.setFillColor(...bleuFonce);
+  doc.rect(0, 0, W, 30, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.rect(0, 30, W, 2.5, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.rect(0, 0, 4, 30, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RELEV\u00c9 DE NOTES', W / 2, 10, { align: 'center' });
+
+  doc.setFontSize(9.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(189, 226, 255);
+  const subLine = 'EXAMEN BLANC CEP' +
+    (info.num  ? '  N\u00ba ' + cleanForPdf(info.num)   : '') +
+    (info.annee ? '  \u2014  ANNEE SCOLAIRE ' + cleanForPdf(info.annee) : '');
+  doc.text(subLine, W / 2, 17.5, { align: 'center' });
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(160, 210, 255);
+  const infoLine = [
+    info.depart  ? 'D\u00e9p.: ' + cleanForPdf(info.depart)   : '',
+    info.ddemp   ? 'DDEMP: '     + cleanForPdf(info.ddemp)    : '',
+    info.cs      ? 'CS: '        + cleanForPdf(info.cs)        : '',
+    info.commune ? 'Commune: '   + cleanForPdf(info.commune)   : '',
+    info.centre  ? 'Centre: '    + cleanForPdf(info.centre)    : ''
+  ].filter(Boolean).join('   |   ');
+  doc.text(infoLine, W / 2, 24.5, { align: 'center' });
+
+  // ── FICHE CANDIDAT ──
+  let y = 39;
+  doc.setFillColor(237, 242, 253);
+  doc.roundedRect(8, y, W - 16, 30, 4, 4, 'F');
+  doc.setDrawColor(...bleu);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(8, y, W - 16, 30, 4, 4, 'S');
+
+  doc.setTextColor(...bleu);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.text('N\u00ba TABLE', 14, y + 8);
+  doc.text('NOM ET PR\u00c9NOMS', 40, y + 8);
+  doc.text('SEXE', 130, y + 8);
+  doc.text('\u00c9COLE DE PROVENANCE', 150, y + 8);
+
+  doc.setDrawColor(190, 210, 230);
+  doc.setLineWidth(0.35);
+  doc.line(38, y + 2, 38, y + 28);
+  doc.line(128, y + 2, 128, y + 28);
+  doc.line(148, y + 2, 148, y + 28);
+
+  doc.setTextColor(15, 15, 15);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text(cleanForPdf(student.id) || '\u2014', 23, y + 21, { align: 'center' });
+  doc.setFontSize(10);
+  doc.text(cleanForPdf(student.nom) || '\u2014', 41, y + 21);
+  doc.setFontSize(11);
+  const sxColor = student.sexe === 'F' ? [233, 30, 99] : [21, 101, 192];
+  doc.setTextColor(...sxColor);
+  doc.text(student.sexe || '\u2014', 138, y + 21, { align: 'center' });
+  doc.setTextColor(15, 15, 15);
+  doc.setFontSize(8.5);
+  doc.text(cleanForPdf(student.ecole) || '\u2014', 151, y + 21);
+
+  y += 36;
+
+  // ── TABLEAU DES NOTES ──
+  const matKeys = (typeof CEP_MATIERES !== 'undefined') ? CEP_MATIERES : Object.keys(CEP_MAT_LABELS);
+  const noteRows = matKeys.map(function(m) {
+    const label = CEP_MAT_LABELS[m] || m;
+    const val   = (n[m] != null) ? parseFloat(n[m]).toFixed(2) : '\u2014';
+    const appr  = (n[m] != null) ? getAppreciation(n[m]) : '';
+    return [label, val, '/20', appr];
+  });
+
+  doc.autoTable({
+    startY: y,
+    head: [['Mati\u00e8re', 'Note', 'Max', 'Appr\u00e9ciation']],
+    body: noteRows,
+    styles: { fontSize: 10, cellPadding: 3.5, valign: 'middle' },
+    headStyles: {
+      fillColor: bleu,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 10,
+      halign: 'center'
+    },
+    alternateRowStyles: { fillColor: creme },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 70 },
+      1: { cellWidth: 22, halign: 'center' },
+      2: { cellWidth: 14, halign: 'center', textColor: [120, 120, 120] },
+      3: { cellWidth: 84, halign: 'left' }
+    },
+    didParseCell: function(data) {
+      if (data.section === 'body') {
+        if (data.column.index === 1) {
+          const v = parseFloat(data.cell.raw);
+          if (!isNaN(v) && v < 10) { data.cell.styles.textColor = [192, 57, 43]; data.cell.styles.fontStyle = 'bold'; }
+          else if (!isNaN(v) && v >= 15) { data.cell.styles.textColor = [26, 71, 49]; data.cell.styles.fontStyle = 'bold'; }
+        }
+        if (data.column.index === 3) {
+          const a = data.cell.raw;
+          if (a === 'Excellent')       { data.cell.styles.textColor = [26, 71, 49];   data.cell.styles.fontStyle = 'bold'; }
+          else if (a === 'Tr\u00e8s Bien') data.cell.styles.textColor = [26, 71, 49];
+          else if (a === 'Bien')           data.cell.styles.textColor = [21, 101, 192];
+          else if (a === 'Assez Bien')     data.cell.styles.textColor = [21, 101, 192];
+          else if (a === 'Passable')       data.cell.styles.textColor = [180, 120, 0];
+          else if (a === 'Insuffisant')    data.cell.styles.textColor = [192, 57, 43];
+          else if (a === 'Tr\u00e8s insuffisant') { data.cell.styles.textColor = [150, 0, 0]; data.cell.styles.fontStyle = 'bold'; }
+        }
       }
-      texte += '\n--- PAGE ' + i + ' ---\n';
     }
-    return texte;
-  }
+  });
 
-  window.pdfJsonTransformer = async function() {
-    if (!_pdfFile) return;
-    // Bloquer si fichier local
-    if (_isLocalFile()) {
-      _checkLocalWarning();
-      var pb2 = document.getElementById('pdf-progress-bar');
-      var pw2 = document.getElementById('pdf-progress-wrap');
-      var pl2 = document.getElementById('pdf-progress-label');
-      if (pw2) pw2.style.display='';
-      if (pb2) { pb2.style.width='100%'; pb2.style.background='#ffc107'; }
-      if (pl2) pl2.textContent='⚠️ Fichier local détecté — hébergez le fichier en ligne (voir guide ci-dessus)';
-      return;
+  y = doc.lastAutoTable.finalY + 5;
+
+  // ── BLOC RÉSUMÉ ──
+  doc.setFillColor(...bleuFonce);
+  doc.roundedRect(8, y, W - 16, 26, 4, 4, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.roundedRect(8, y, 4, 26, 2, 0, 'F');
+
+  const cols = [
+    { label: 'TOTAL /180', value: totalVal },
+    { label: 'MOYENNE /20', value: moyVal + (moyVal !== '\u2014' ? '/20' : '') },
+    { label: 'SEUIL (>= 6 mat.)', value: seuilTxt },
+    { label: 'RANG', value: rang }
+  ];
+  const colW2 = (W - 20) / cols.length;
+  cols.forEach(function(col, si) {
+    const cx = 10 + si * colW2 + colW2 / 2;
+    doc.setTextColor(160, 210, 255);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text(col.label, cx, y + 8, { align: 'center' });
+    doc.setFontSize(12);
+    if (col.label === 'SEUIL (>= 6 mat.)') {
+      doc.setTextColor(seuilOk ? 144 : 255, seuilOk ? 238 : 160, seuilOk ? 144 : 122);
+    } else if (col.label === 'MOYENNE /20') {
+      const mv = parseFloat(moyVal);
+      doc.setTextColor(!isNaN(mv) && mv >= 15 ? 189 : 255, !isNaN(mv) && mv >= 15 ? 226 : 255, 255);
+    } else {
+      doc.setTextColor(255, 255, 255);
     }
-    var pw = document.getElementById('pdf-progress-wrap');
-    var pb = document.getElementById('pdf-progress-bar');
-    var pl = document.getElementById('pdf-progress-label');
-    pw.style.display=''; pb.style.width='5%'; pb.style.background='';
-    pl.textContent = 'Lecture du PDF en local…';
-    document.getElementById('btn-transformer').disabled = true;
-    document.getElementById('btn-export-json').disabled = true;
-    document.getElementById('pdf-empty-msg').style.display = 'none';
-    document.getElementById('pdf-result-zone').style.display = 'none';
+    doc.text(col.value || '\u2014', cx, y + 19, { align: 'center' });
+  });
 
+  y += 30;
+
+  // ── SIGNATURE ──
+  // Ancrage : sigY = ligne horizontale de signature.
+  // - Cible : H - 45 = 252mm (laisse ~34mm libres avant le pied de page).
+  // - Minimum : y + 22 pour ne jamais chevaucher le bloc résumé.
+  // - Maximum : H - 32 = 265mm pour garantir ≥ 21mm de marge avant le pied de page.
+  const sigY = Math.min(Math.max(y + 22, H - 45), H - 32);
+
+  // Image de signature au-dessus de la ligne (occupe 24mm de hauteur)
+  if (releveSigDataUrl) {
     try {
-      // ÉTAPE 1 : extraction texte locale (pdf.js, pas de réseau)
-      var texte = await _extraireTextePDF(_pdfFile);
-      pb.style.width = '40%';
-      pl.textContent = 'Texte extrait (' + texte.length + ' car.) — Envoi à l\'IA…';
-
-      // ÉTAPE 2 : envoi du TEXTE (pas du PDF binaire) à l'API → pas de CORS
-      var response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 8192,
-          system: "Tu es un extracteur de données strictement JSON. On te fournit le texte brut d'un PDF de liste de candidats. Tu dois retourner UNIQUEMENT un tableau JSON valide (aucun texte avant, aucun texte après, aucun bloc markdown, aucun commentaire). Format obligatoire de chaque objet : {\"numero_table\":\"\",\"nom_prenoms\":\"\",\"sexe\":\"\",\"ecole_provenance\":\"\"}. Si une donnée est absente, mets \"\". Ne corrige, ne modifie, ne normalise aucune information.",
-          messages: [{
-            role: 'user',
-            content: "Voici le texte extrait du PDF. Extrais tous les candidats et retourne UNIQUEMENT le tableau JSON :\n\n" + texte
-          }]
-        })
-      });
-
-      pb.style.width = '75%';
-      pl.textContent = 'Traitement de la réponse IA…';
-
-      var data = await response.json();
-      if (!response.ok) throw new Error(data.error ? data.error.message : 'Erreur API (' + response.status + ')');
-
-      var raw = '';
-      if (data.content && Array.isArray(data.content)) {
-        for (var block of data.content) { if (block.type === 'text') raw += block.text; }
-      }
-      // Nettoyer les balises markdown éventuelles
-      raw = raw.trim()
-        .replace(/^```json\s*/i,'').replace(/^```\s*/,'')
-        .replace(/\s*```$/,'').trim();
-
-      var parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) throw new Error('Réponse non conforme — tableau JSON attendu');
-
-      _candidats = parsed.map(function(c) {
-        return {
-          numero_table:     String(c.numero_table     !== undefined ? c.numero_table     : ''),
-          nom_prenoms:      String(c.nom_prenoms      !== undefined ? c.nom_prenoms      : ''),
-          sexe:             String(c.sexe             !== undefined ? c.sexe             : ''),
-          ecole_provenance: String(c.ecole_provenance !== undefined ? c.ecole_provenance : '')
-        };
-      });
-
-      pb.style.width = '100%';
-      pl.textContent = '✔ ' + _candidats.length + ' candidat(s) extrait(s) avec succès.';
-      _pdfAfficherResultat();
-      document.getElementById('btn-export-json').disabled = false;
-      document.getElementById('btn-transformer').disabled = false;
-      setTimeout(function(){ pw.style.display = 'none'; }, 3000);
-
-    } catch(err) {
-      pb.style.width = '100%'; pb.style.background = '#ef5350';
-      pl.textContent = '❌ Erreur : ' + err.message;
-      document.getElementById('btn-transformer').disabled = false;
-      console.error('[PDF→JSON]', err);
-    }
-  };
-
-  function _pdfAfficherResultat() {
-    var tbody = document.getElementById('pdf-result-body');
-    tbody.innerHTML = '';
-    _candidats.forEach(function(c) {
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td style="font-family:\'Courier New\',monospace;font-size:12px;text-align:center;">' + _esc(c.numero_table) + '</td>' +
-        '<td class="nom-cell" style="padding-left:10px;">' + _esc(c.nom_prenoms) + '</td>' +
-        '<td style="text-align:center;">' + _esc(c.sexe) + '</td>' +
-        '<td style="padding-left:10px;">' + _esc(c.ecole_provenance) + '</td>';
-      tbody.appendChild(tr);
-    });
-    document.getElementById('pdf-count-badge').textContent = _candidats.length + ' candidat(s)';
-    document.getElementById('pdf-result-zone').style.display = '';
+      doc.addImage(releveSigDataUrl, 'PNG', 127, sigY - 26, 64, 24);
+    } catch(e) {}
+  } else {
+    // Zone réservée en pointillés si pas de signature
+    doc.setDrawColor(190, 190, 190);
+    doc.setLineWidth(0.25);
+    doc.setLineDashPattern([1, 1.5], 0);
+    doc.rect(127, sigY - 24, 64, 22, 'S');
+    doc.setLineDashPattern([], 0);
+    doc.setTextColor(190, 190, 190);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Signature', 159, sigY - 12, { align: 'center' });
   }
 
-  window.pdfJsonExporter = function() {
-    if (!_candidats.length) return;
-    var json = JSON.stringify(_candidats, null, 2);
-    var blob = new Blob([json], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'candidats_' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1000);
-  };
+  // Ligne horizontale de signature
+  doc.setDrawColor(...bleu);
+  doc.setLineWidth(0.6);
+  doc.line(122, sigY, 196, sigY);
 
-  function _esc(s) {
-    return String(s||'')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // "Le Chef de Centre" — 7mm sous la ligne
+  doc.setTextColor(...bleu);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Le Chef de Centre', 159, sigY + 7, { align: 'center' });
+
+  // Nom — 14mm sous la ligne
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(50, 50, 50);
+  doc.setFontSize(8.5);
+  doc.text(cleanForPdf(info.chef) || '\u2014', 159, sigY + 14, { align: 'center' });
+
+  // Date — 21mm sous la ligne (si renseignée)
+  if (info.dateSig) {
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(110, 110, 110);
+    doc.text(cleanForPdf(info.dateSig), 159, sigY + 21, { align: 'center' });
+  }
+
+  // ── PIED DE PAGE BLEU ──
+  doc.setFillColor(...bleuFonce);
+  doc.rect(0, H - 11, W, 11, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.rect(0, H - 11, W, 1.5, 'F');
+  doc.setTextColor(189, 226, 255);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  const now = new Date();
+  const footerTxt = cleanForPdf(
+    'GESTIONNAIRE D\'EVALUATION 3.0  \u00b7  CEP BLANC' +
+    (info.centre ? '  \u00b7  ' + info.centre : '') +
+    (info.annee  ? '  \u00b7  ' + info.annee  : '') +
+    '  \u00b7  Imprim\u00e9 le ' + now.toLocaleDateString('fr-FR') +
+    ' \u00e0 ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'})
+  );
+  doc.text(footerTxt, W / 2, H - 4, { align: 'center' });
+}
+
+// ── Génération individuelle ──
+function releveGenererIndividuel() {
+  if (typeof cepStudents === 'undefined' || cepStudents.length === 0) {
+    alert('Aucun candidat dans l\'onglet \u2464 CEP. Veuillez d\'abord importer la liste.');
+    return;
+  }
+  const sel = document.getElementById('releve-select-candidat');
+  const idx = sel ? parseInt(sel.value) : NaN;
+  if (isNaN(idx) || sel.value === '') {
+    alert('Veuillez s\u00e9lectionner un(e) candidat(e).');
+    return;
+  }
+  const student = cepStudents[idx];
+  if (!student) { alert('Candidat introuvable.'); return; }
+
+  const info = releveGetCepInfo();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  releveBuildPage(doc, student, info, true);
+
+  const fname = 'Releve_CEP_' + cleanForPdf(student.id + '_' + student.nom).replace(/\s+/g,'_').replace(/[^A-Za-z0-9_\-]/g,'') + '.pdf';
+  doc.save(fname);
+
+  const infoDiv = document.getElementById('releve-individuel-info');
+  if (infoDiv) {
+    infoDiv.style.display = 'block';
+    infoDiv.innerHTML = '<span style="color:#43a047;font-weight:bold;">\u2705 PDF t\u00e9l\u00e9charg\u00e9 : ' + fname + '</span>';
+  }
+}
+
+// ── Génération groupée ──
+function releveGenererGroupé() {
+  if (typeof cepStudents === 'undefined' || cepStudents.length === 0) {
+    alert('Aucun candidat dans l\'onglet \u2464 CEP. Veuillez d\'abord importer la liste.');
+    return;
+  }
+  if (!confirm('G\u00e9n\u00e9rer le relev\u00e9 group\u00e9 PDF pour ' + cepStudents.length + ' candidat(s) ?')) return;
+
+  const info = releveGetCepInfo();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  cepStudents.forEach(function(student, idx) {
+    releveBuildPage(doc, student, info, idx === 0);
+  });
+
+  const centre = cleanForPdf(info.centre || 'Centre').replace(/\s+/g,'_').replace(/[^A-Za-z0-9_\-]/g,'');
+  const annee  = cleanForPdf(info.annee  || '').replace(/\s+/g,'_').replace(/[^A-Za-z0-9_\-]/g,'');
+  const fname  = 'Releves_CEP_Groupe_' + centre + (annee ? '_' + annee : '') + '.pdf';
+  doc.save(fname);
+
+  const infoDiv = document.getElementById('releve-groupe-info');
+  if (infoDiv) {
+    infoDiv.style.display = 'block';
+    infoDiv.innerHTML = '<span style="color:#43a047;font-weight:bold;">\u2705 PDF group\u00e9 t\u00e9l\u00e9charg\u00e9 : ' + fname + ' (' + cepStudents.length + ' candidat(s))</span>';
+  }
+}
+
+// ── Hook : initialiser l'onglet 7 lors de l'ouverture ──
+(function() {
+  const origShowTab = window.showTab;
+  if (typeof origShowTab === 'function') {
+    window.showTab = function(id, el) {
+      origShowTab(id, el);
+      if (id === 'releveNotesCep') {
+        releveInitCanvas();
+        releveActualiserListe();
+      }
+    };
   }
 })();
 
