@@ -584,11 +584,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
   thead th {
     padding: 10px 7px;
     text-align: center;
+    vertical-align: middle;
     font-family: 'Courier New', Courier, monospace;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
     border-right: 1px solid rgba(255,255,255,0.15);
   }
 
@@ -1071,8 +1073,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <button class="btn btn-gold" onclick="exportPDF()">⬇ Rapport PDF</button>
     <button class="btn btn-gold" onclick="exportBulletinsClasse()" title="Générer un bulletin pour chaque élève">🎓 Bulletins Classe</button>
     <button class="btn btn-gold" onclick="showBulletinModal()" title="Générer le bulletin d'un seul élève">📋 Bulletin Élève</button>
+    <button type="button" id="btnTelechargerModeleExcel" class="btn btn-outline" title="Générer un modèle Excel avec les matières cochées">📤 Modèle Excel</button>
     <input type="file" id="excelImportEleves" accept=".xlsx,.xls" style="display:none;">
-    <button type="button" id="btnImportExcelEleves" class="btn btn-outline">📥 Importer</button>
+    <button type="button" id="btnImportExcelEleves" class="btn btn-outline">📥 Importer Excel</button>
     <button class="btn btn-outline" onclick="clearAll()">🗑 Réinitialiser</button>
     <button class="btn btn-outline" onclick="saveLocal()">💾 Sauvegarder</button>
     <button class="btn btn-outline" onclick="loadLocal()">📂 Charger</button>
@@ -1149,22 +1152,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <!-- SÉLECTEUR DE MATIÈRES -->
         <div style="background:#f0f4ff;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #c5cae9;">
           <div style="font-weight:bold;color:var(--bleu);margin-bottom:10px;font-size:13px;">📚 Matières du cours (cochez celles qui s'appliquent à cette classe)</div>
-          <div id="matieres-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 18px;">
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Lecture" checked> Lecture</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="C.O"> C.O</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Anglais"> Anglais</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="E.E" checked> E.E</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="ES" checked> ES</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EST" checked> EST</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Maths" checked> Maths</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Dictée" checked> Dictée</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Vivant" checked> EA/Vivant</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Dessin"> EA/Dessin</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Couture"> EA/Couture</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EPS" checked> EPS</label>
+          <!-- Zone matières cochées (ordre de sélection) -->
+          <div id="matieres-selectionnees-zone" style="display:none;margin-bottom:8px;">
+            <div style="font-size:11px;color:#1565c0;font-weight:bold;margin-bottom:5px;letter-spacing:.3px;">✅ Matières sélectionnées (dans l'ordre)</div>
+            <div id="matieres-selectionnees" style="display:flex;flex-wrap:wrap;gap:6px 14px;"></div>
+          </div>
+          <!-- Zone matières non cochées -->
+          <div id="matieres-disponibles-zone">
+            <div id="label-disponibles" style="font-size:11px;color:#888;font-weight:bold;margin-bottom:5px;letter-spacing:.3px;display:none;">📋 Matières disponibles</div>
+            <div id="matieres-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 18px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="C.E"> C.E</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="C.O"> C.O</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Anglais"> Anglais</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="E.E"> E.E</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="ES"> ES</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EST"> EST</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Maths"> Maths</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="Dictée"> Dictée</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Vivant"> EA/Vivant</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Dessin"> EA/Dessin</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EA/Couture"> EA/Couture</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="mat-chk" value="EPS"> EPS</label>
+            </div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:#666;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-            <span id="nb-matieres-badge" style="background:var(--or);color:#333;padding:3px 10px;border-radius:10px;font-weight:bold;">6 matières sélectionnées</span>
+            <span id="nb-matieres-badge" style="background:var(--or);color:#333;padding:3px 10px;border-radius:10px;font-weight:bold;">0 matière sélectionnée</span>
             <button onclick="toutSelectionner(true)" style="background:none;border:1px solid var(--bleu);color:var(--bleu);padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;">Tout cocher</button>
             <button onclick="toutSelectionner(false)" style="background:none;border:1px solid #999;color:#555;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;">Tout décocher</button>
           </div>
@@ -1202,7 +1214,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
                 <th>N°</th>
                 <th style="min-width:160px;text-align:left;padding-left:10px;">Nom et prénoms</th>
                 <th>Sexe</th>
-                <th>Lecture</th><th>E.E</th><th>ES</th><th>EST</th><th>Maths</th><th>Dictée</th><th>EA/Vivant</th><th>EA/Couture</th><th>EPS</th>
+                <th>C.E</th><th>E.E</th><th>ES</th><th>EST</th><th>Maths</th><th>Dictée</th><th>EA/Vivant</th><th>EA/Couture</th><th>EPS</th>
                 <th>Total</th><th>Moy./20</th><th>Mat.≥10</th><th>Seuil</th><th>Rang</th>
               </tr>
             </thead>
@@ -1911,8 +1923,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 // ═══════════════════════════════════════
 //  CONFIGURATION
 // ═══════════════════════════════════════
-const TOUTES_MATIERES = ['Lecture','C.O','Anglais','E.E','ES','EST','Maths','Dictée','EA/Vivant','EA/Dessin','EA/Couture','EPS'];
-let MATIERES = ['Lecture','E.E','ES','EST','Maths','Dictée','EA/Vivant','EPS']; // Défaut, mis à jour dynamiquement
+const TOUTES_MATIERES = ['C.E','C.O','Anglais','E.E','ES','EST','Maths','Dictée','EA/Vivant','EA/Dessin','EA/Couture','EPS'];
+let MATIERES = []; // Défaut, mis à jour dynamiquement
 let nbEleves = 71;
 let seuil = 10;
 let seuilMatNumerateur = null; // null = auto (Math.ceil(N/2)), sinon valeur saisie par l'utilisateur
@@ -1943,8 +1955,11 @@ function onSeuilMatChange() {
   majBadgeSeuilMat();
 }
 
+// Tableau qui mémorise l'ordre de sélection des matières
+let _matieresOrdreSelection = [];
+
 function getMatieresSelectionnees() {
-  return Array.from(document.querySelectorAll('.mat-chk:checked')).map(c => c.value);
+  return _matieresOrdreSelection.slice();
 }
 
 function majBadgeMatieres() {
@@ -1967,13 +1982,109 @@ function majBadgeMatieres() {
 }
 
 function toutSelectionner(etat) {
-  document.querySelectorAll('.mat-chk').forEach(c => c.checked = etat);
+  if (etat) {
+    document.querySelectorAll('.mat-chk').forEach(c => {
+      c.checked = true;
+      if (!_matieresOrdreSelection.includes(c.value)) {
+        _matieresOrdreSelection.push(c.value);
+      }
+    });
+  } else {
+    document.querySelectorAll('.mat-chk').forEach(c => { c.checked = false; });
+    _matieresOrdreSelection = [];
+  }
+  _initMatieresRef();
   majBadgeMatieres();
+  majAffichageMatieres();
+}
+
+// ── Réorganisation visuelle des matières selon l'ordre de sélection ──
+// Référentiel immuable des matières originales (construit une seule fois au DOMContentLoaded)
+let _matieresRef = []; // [{value, label}]
+
+function _initMatieresRef() {
+  if (_matieresRef.length > 0) return;
+  document.querySelectorAll('.mat-chk').forEach(chk => {
+    _matieresRef.push({ value: chk.value, label: chk.value });
+  });
+}
+
+function _creerLabelMatiere(val, coche, idx) {
+  const label = document.createElement('label');
+  if (coche) {
+    label.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:#e3f2fd;border:1.5px solid #90caf9;border-radius:6px;padding:3px 9px;font-weight:600;color:#1565c0;';
+    const badge = document.createElement('span');
+    badge.textContent = idx + 1;
+    badge.style.cssText = 'background:#1565c0;color:#fff;border-radius:50%;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0;padding:0 2px;';
+    label.appendChild(badge);
+  } else {
+    label.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;';
+  }
+  const chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.className = 'mat-chk';
+  chk.value = val;
+  chk.checked = coche;
+  chk.addEventListener('change', function() {
+    if (this.checked) {
+      if (!_matieresOrdreSelection.includes(this.value)) _matieresOrdreSelection.push(this.value);
+    } else {
+      _matieresOrdreSelection = _matieresOrdreSelection.filter(v => v !== this.value);
+    }
+    majBadgeMatieres();
+    majAffichageMatieres();
+  });
+  label.appendChild(chk);
+  label.appendChild(document.createTextNode(' ' + val));
+  return label;
+}
+
+function majAffichageMatieres() {
+  _initMatieresRef();
+  const zoneSelectionnees = document.getElementById('matieres-selectionnees');
+  const zoneDisponibles = document.getElementById('matieres-checkboxes');
+  const banniereSelectionnees = document.getElementById('matieres-selectionnees-zone');
+  const labelDispo = document.getElementById('label-disponibles');
+  if (!zoneSelectionnees || !zoneDisponibles) return;
+
+  zoneSelectionnees.innerHTML = '';
+  zoneDisponibles.innerHTML = '';
+
+  // Cochées : dans l'ordre de sélection, avec badge numéroté
+  _matieresOrdreSelection.forEach((val, idx) => {
+    zoneSelectionnees.appendChild(_creerLabelMatiere(val, true, idx));
+  });
+
+  // Non cochées : dans l'ordre original
+  _matieresRef.forEach(ref => {
+    if (!_matieresOrdreSelection.includes(ref.value)) {
+      zoneDisponibles.appendChild(_creerLabelMatiere(ref.value, false, -1));
+    }
+  });
+
+  // Affichage des zones
+  const hasSel = _matieresOrdreSelection.length > 0;
+  const hasDispo = zoneDisponibles.children.length > 0;
+  if (banniereSelectionnees) banniereSelectionnees.style.display = hasSel ? 'block' : 'none';
+  if (labelDispo) labelDispo.style.display = hasDispo ? '' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.mat-chk').forEach(c => c.addEventListener('change', majBadgeMatieres));
+  document.querySelectorAll('.mat-chk').forEach(c => {
+    c.addEventListener('change', function() {
+      if (this.checked) {
+        if (!_matieresOrdreSelection.includes(this.value)) {
+          _matieresOrdreSelection.push(this.value);
+        }
+      } else {
+        _matieresOrdreSelection = _matieresOrdreSelection.filter(v => v !== this.value);
+      }
+      majBadgeMatieres();
+      majAffichageMatieres();
+    });
+  });
   majBadgeMatieres();
+  majAffichageMatieres();
   // Initialiser le label nb-mat-total
   const nbMatTotal = document.getElementById('nb-mat-total');
   if (nbMatTotal) nbMatTotal.textContent = getMatieresSelectionnees().length;
@@ -2622,40 +2733,46 @@ async function exportPDF() {
     tableData.push([i + 1, nom, sexe, ...notes, total, moy, mat, seuilTxt, rang]);
   });
 
+  // Construction dynamique de l'en-tête selon les matières cochées
+  const matierescochees = getMatieresSelectionnees();
+  const pdfHeadRow = ['N°', 'Nom et Prénoms', 'SEXE', ...matierescochees, 'Total', 'Moy.', 'Mat >= 10', 'Seuil', 'Rang'];
+  const nbMatieres = matierescochees.length;
+  const dernierColNotes = 2 + nbMatieres; // index de la dernière colonne de notes (0-based)
+  const colSeuil = 3 + nbMatieres + 3; // N° + Nom + Sexe + notes + Total + Moy + Mat
+
+  // Largeurs dynamiques selon nombre de matières
+  const noteWidth = Math.min(17, Math.max(11, Math.floor((W - 20 - 9 - 46 - 9 - 18 - 18 - 18 - 17 - 11) / nbMatieres)));
+  const dynColStyles = {
+    0: { cellWidth: 9, halign: 'center' },
+    1: { cellWidth: 46, halign: 'left', overflow: 'hidden' },
+    2: { cellWidth: 9, halign: 'center' },
+  };
+  for (let i = 0; i < nbMatieres; i++) {
+    dynColStyles[3 + i] = { cellWidth: noteWidth, halign: 'center' };
+  }
+  dynColStyles[3 + nbMatieres]     = { cellWidth: 18, halign: 'center' }; // Total
+  dynColStyles[3 + nbMatieres + 1] = { cellWidth: 18, halign: 'center' }; // Moy
+  dynColStyles[3 + nbMatieres + 2] = { cellWidth: 18, halign: 'center' }; // Mat >= 10
+  dynColStyles[3 + nbMatieres + 3] = { cellWidth: 17, halign: 'center' }; // Seuil
+  dynColStyles[3 + nbMatieres + 4] = { cellWidth: 11, halign: 'center' }; // Rang
+
   doc.autoTable({
     startY: 50,
     margin: { left: 10, right: 10 },
-    head: [['N°', 'Nom et prenoms', 'SEXE', 'Lecture', 'E.E', 'ES', 'EST', 'Maths', 'Dictee', 'EA/V', 'EA/P', 'EPS', 'Total', 'Moy.', 'Mat >= 10', 'Seuil', 'Rang']],
+    head: [pdfHeadRow],
     body: tableData,
-    styles: { fontSize: 7, cellPadding: 1.5, valign: 'middle' },
-    headStyles: { fillColor: vert, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+    styles: { fontSize: 7, cellPadding: 1.5, valign: 'middle', halign: 'center', overflow: 'hidden' },
+    headStyles: { fillColor: vert, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7, halign: 'center', valign: 'middle', cellPadding: 2 },
     alternateRowStyles: { fillColor: [250, 246, 238] },
-    columnStyles: {
-      0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 46 },
-      2: { cellWidth: 9, halign: 'center' },
-      3: { cellWidth: 17, halign: 'center' },
-      4: { cellWidth: 13, halign: 'center' },
-      5: { cellWidth: 13, halign: 'center' },
-      6: { cellWidth: 13, halign: 'center' },
-      7: { cellWidth: 17, halign: 'center' },
-      8: { cellWidth: 15, halign: 'center' },
-      9: { cellWidth: 15, halign: 'center' },
-      10: { cellWidth: 15, halign: 'center' },
-      11: { cellWidth: 13, halign: 'center' },
-      12: { cellWidth: 18, halign: 'center' },
-      13: { cellWidth: 18, halign: 'center' },
-      14: { cellWidth: 18, halign: 'center' },
-      15: { cellWidth: 17, halign: 'center' },
-      16: { cellWidth: 11, halign: 'center' },
-    },
+    columnStyles: dynColStyles,
     didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 15) {
+      // Colorier la colonne Seuil
+      if (data.section === 'body' && data.column.index === 3 + nbMatieres + 3) {
         if (data.cell.raw === 'OUI') data.cell.styles.textColor = [26, 71, 49];
         if (data.cell.raw === 'NON') data.cell.styles.textColor = [192, 57, 43];
       }
       // Colorer les notes < 10 en rouge dans le PDF
-      if (data.section === 'body' && data.column.index >= 3 && data.column.index <= 11) {
+      if (data.section === 'body' && data.column.index >= 3 && data.column.index <= 2 + nbMatieres) {
         let val = parseFloat(data.cell.raw);
         if (!isNaN(val) && val < 10) {
           data.cell.styles.textColor = [192, 57, 43];
@@ -3322,6 +3439,7 @@ function saveLocal() {
     seuil: document.getElementById('seuil').value,
     seuilMatNum: seuilMatNumerateur,
     nbEleves: document.getElementById('nb-eleves').value,
+    matieresOrdre: _matieresOrdreSelection.slice(),
     eleves: []
   };
 
@@ -3369,6 +3487,17 @@ function loadLocal() {
           if (inp) inp.value = seuilMatNumerateur;
         }
         document.getElementById('nb-eleves').value = data.nbEleves || 71;
+        // Restaurer les matières dans leur ordre de sélection
+        if (Array.isArray(data.matieresOrdre) && data.matieresOrdre.length > 0) {
+          _matieresOrdreSelection = [];
+          document.querySelectorAll('.mat-chk').forEach(c => { c.checked = false; });
+          data.matieresOrdre.forEach(val => {
+            const chk = document.querySelector(`.mat-chk[value="${val}"]`);
+            if (chk) { chk.checked = true; _matieresOrdreSelection.push(val); }
+          });
+          majBadgeMatieres();
+          if (typeof majAffichageMatieres === 'function') majAffichageMatieres();
+        }
         updateHeader();
         buildTable();
         setTimeout(() => {
@@ -3400,6 +3529,13 @@ function clearAll() {
   document.getElementById('nb-eleves').value = '';
   document.getElementById('seuil').value = 10;
   document.getElementById('table-body').innerHTML = '';
+  // Réinitialiser les matières
+  _matieresOrdreSelection = [];
+  seuilMatNumerateur = null;
+  const seuilInp = document.getElementById('seuil-mat-num');
+  if (seuilInp) seuilInp.value = '';
+  majBadgeMatieres();
+  majAffichageMatieres();
   updateHeader();
 }
 
@@ -3416,6 +3552,7 @@ function saveLocalBrowser() {
     seuil: document.getElementById('seuil').value,
     seuilMatNum: seuilMatNumerateur,
     nbEleves: document.getElementById('nb-eleves').value,
+    matieresOrdre: _matieresOrdreSelection.slice(),
     eleves: []
   };
   document.querySelectorAll('#table-body tr').forEach((row) => {
@@ -3452,6 +3589,17 @@ function loadLocalBrowser() {
       if (inp) inp.value = seuilMatNumerateur;
     }
     document.getElementById('nb-eleves').value = data.nbEleves || 71;
+    // Restaurer les matières dans leur ordre de sélection
+    if (Array.isArray(data.matieresOrdre) && data.matieresOrdre.length > 0) {
+      _matieresOrdreSelection = [];
+      document.querySelectorAll('.mat-chk').forEach(c => { c.checked = false; });
+      data.matieresOrdre.forEach(val => {
+        const chk = document.querySelector(`.mat-chk[value="${val}"]`);
+        if (chk) { chk.checked = true; _matieresOrdreSelection.push(val); }
+      });
+      majBadgeMatieres();
+      if (typeof majAffichageMatieres === 'function') majAffichageMatieres();
+    }
     updateHeader();
     buildTable();
     setTimeout(() => {
@@ -3504,6 +3652,17 @@ function saisieAutoRestore() {
       if (inp) inp.value = seuilMatNumerateur;
     }
     document.getElementById('nb-eleves').value = data.nbEleves || '';
+    // Restaurer les matières dans leur ordre de sélection
+    if (Array.isArray(data.matieresOrdre) && data.matieresOrdre.length > 0) {
+      _matieresOrdreSelection = [];
+      document.querySelectorAll('.mat-chk').forEach(c => { c.checked = false; });
+      data.matieresOrdre.forEach(val => {
+        const chk = document.querySelector(`.mat-chk[value="${val}"]`);
+        if (chk) { chk.checked = true; _matieresOrdreSelection.push(val); }
+      });
+      majBadgeMatieres();
+      if (typeof majAffichageMatieres === 'function') majAffichageMatieres();
+    }
     updateHeader();
     if (data.eleves && data.eleves.length > 0) {
       buildTable();
@@ -4385,84 +4544,222 @@ function downloadSinglePassageBulletin(idx) {
 <script>window.onload = function() { updateHeader(); renderEvalInputs(); };</script>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+//  ONGLET 1 — MODÈLE EXCEL + IMPORT INTELLIGENT PAR EN-TÊTES
+// ═══════════════════════════════════════════════════════════════
+
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Téléchargement du modèle Excel ──
+    const btnModele = document.getElementById('btnTelechargerModeleExcel');
+    if (btnModele) {
+        btnModele.addEventListener('click', function () {
+            const matieres = typeof getMatieresSelectionnees === 'function' ? getMatieresSelectionnees() : [];
+            if (matieres.length === 0) {
+                alert('Veuillez sélectionner au moins une matière avant de télécharger le modèle.');
+                return;
+            }
+
+            // Construire la ligne d'en-tête : Nom et Prénom | Sexe | <matières>
+            const headers = ['Nom et Prénom', 'Sexe', ...matieres];
+
+            // Créer le workbook avec SheetJS
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([headers]);
+
+            // Largeurs de colonnes adaptées
+            ws['!cols'] = [
+                { wch: 30 },   // Nom et Prénom
+                { wch: 8 },    // Sexe
+                ...matieres.map(() => ({ wch: 12 }))
+            ];
+
+            // Style de la ligne d'en-tête (gras)
+            // SheetJS CE ne supporte pas les styles natifs mais on peut protéger les headers
+            // en verrouillant simplement les cellules d'en-tête (protection optionnelle)
+            XLSX.utils.book_append_sheet(wb, ws, 'Notes');
+
+            // Exporter
+            const cours = (document.getElementById('cours') && document.getElementById('cours').value) || 'Classe';
+            const etape = (document.getElementById('etape') && document.getElementById('etape').value) || '';
+            const filename = 'Modele_Notes_' + cours.replace(/\s+/g,'_') + (etape ? '_Etape' + etape : '') + '.xlsx';
+            XLSX.writeFile(wb, filename);
+        });
+    }
+
+    // ── Import Excel intelligent par reconnaissance des en-têtes ──
     const btnImport = document.getElementById('btnImportExcelEleves');
     const inputExcel = document.getElementById('excelImportEleves');
 
-    if(btnImport && inputExcel){
+    if (btnImport && inputExcel) {
         btnImport.addEventListener('click', () => { inputExcel.value = ''; inputExcel.click(); });
 
-        inputExcel.addEventListener('change', function(e){
+        inputExcel.addEventListener('change', function (e) {
             const file = e.target.files[0];
-            if(!file) return;
+            if (!file) return;
 
             const reader = new FileReader();
 
-            reader.onload = function(evt){
-                try{
+            reader.onload = function (evt) {
+                try {
                     const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
+                    const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
 
-                    if(!jsonData || jsonData.length < 2){
-                        alert("Le fichier semble vide ou sans données.");
+                    // Lire avec en-têtes brutes (ligne 1 = headers)
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                    if (!jsonData || jsonData.length < 2) {
+                        alert('Le fichier semble vide ou sans données.');
                         return;
                     }
 
-                    // Détecter le format : compter le nb de colonnes dans la 1ère ligne de données
-                    // Format 1 : 2 colonnes (Nom, Sexe)
-                    // Format 2 : 11 colonnes (Nom, Sexe + 9 notes)
-                    const premiereDataRow = jsonData[1] || [];
-                    const nbCols = premiereDataRow.length;
-                    const avecNotes = nbCols >= 11;
+                    // Analyser les en-têtes (1ère ligne)
+                    const headerRow = jsonData[0].map(h => String(h).trim());
 
-                    // S'assurer que le tableau est assez grand
-                    const lignesDataValides = jsonData.slice(1).filter(r => r[0] && String(r[0]).trim() !== '');
-                    const nbElevesAImporter = lignesDataValides.length;
+                    // Identifier la colonne Nom et Prénom (insensible à la casse, variantes)
+                    const nomIdx = headerRow.findIndex(h => /nom|pr.nom/i.test(h));
+                    // Identifier la colonne Sexe
+                    const sexeIdx = headerRow.findIndex(h => /sexe/i.test(h));
 
-                    // Adapter le nombre de lignes si nécessaire
-                    const nbElevesActuel = parseInt(document.getElementById('nb-eleves').value) || 0;
-                    if(nbElevesAImporter > nbElevesActuel){
-                        document.getElementById('nb-eleves').value = nbElevesAImporter;
-                        buildTable();
+                    // Si aucun en-tête reconnu → ancien format 2-colonnes (Nom col0, Sexe col1)
+                    const avecHeaders = nomIdx >= 0 && sexeIdx >= 0;
+
+                    // Normalisation pour comparaison souple
+                    const normaliser = s => String(s).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                    // ── AUTO-CONFIGURATION DES MATIÈRES DEPUIS LES EN-TÊTES EXCEL ──
+                    if (avecHeaders) {
+                        // Colonnes qui ne sont ni Nom/Prénom ni Sexe = matières
+                        const colonnesReservees = new Set([nomIdx, sexeIdx]);
+                        const matieresExcel = [];
+                        headerRow.forEach((h, idx) => {
+                            if (!colonnesReservees.has(idx) && h.trim() !== '') {
+                                matieresExcel.push({ label: h.trim(), colIdx: idx });
+                            }
+                        });
+
+                        if (matieresExcel.length > 0) {
+                            // Décocher toutes les cases matières actuelles
+                            document.querySelectorAll('.mat-chk').forEach(chk => { chk.checked = false; });
+                            _matieresOrdreSelection = [];
+
+                            // Cocher les matières reconnues dans les checkboxes
+                            matieresExcel.forEach(mat => {
+                                const matNorm = normaliser(mat.label);
+                                let chkTrouve = null;
+                                document.querySelectorAll('.mat-chk').forEach(chk => {
+                                    if (normaliser(chk.value) === matNorm) chkTrouve = chk;
+                                });
+                                if (chkTrouve && !chkTrouve.checked) {
+                                    chkTrouve.checked = true;
+                                    _matieresOrdreSelection.push(chkTrouve.value);
+                                } else if (!chkTrouve) {
+                                    // Matière non trouvée dans les checkboxes : l'ajouter dynamiquement
+                                    const divChk = document.getElementById('matieres-checkboxes');
+                                    if (divChk) {
+                                        const lbl = document.createElement('label');
+                                        lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;';
+                                        const inp = document.createElement('input');
+                                        inp.type = 'checkbox';
+                                        inp.className = 'mat-chk';
+                                        inp.value = mat.label;
+                                        inp.checked = true;
+                                        inp.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                _matieresOrdreSelection.push(this.value);
+                                            } else {
+                                                _matieresOrdreSelection = _matieresOrdreSelection.filter(m => m !== this.value);
+                                            }
+                                            majBadgeMatieres();
+                                        });
+                                        lbl.appendChild(inp);
+                                        lbl.appendChild(document.createTextNode(' ' + mat.label));
+                                        divChk.appendChild(lbl);
+                                        _matieresOrdreSelection.push(mat.label);
+                                    }
+                                }
+                            });
+
+                            // Mettre à jour le badge matières
+                            if (typeof majBadgeMatieres === 'function') majBadgeMatieres();
+                            if (typeof majAffichageMatieres === 'function') majAffichageMatieres();
+                        }
                     }
+
+                    // Matières actuellement dans le tableau (après auto-configuration)
+                    const matieresTableau = typeof getMatieresSelectionnees === 'function' ? getMatieresSelectionnees() : [];
+
+                    // Mapper chaque matière du tableau à son index de colonne dans le fichier Excel
+                    const matieresColIdx = matieresTableau.map(mat => {
+                        const matNorm = normaliser(mat);
+                        return headerRow.findIndex(h => normaliser(h) === matNorm);
+                    });
+
+                    // Lignes de données (ignorer ligne d'en-tête)
+                    const lignesDataValides = jsonData.slice(1).filter(r => {
+                        const nomVal = avecHeaders ? r[nomIdx] : r[0];
+                        return nomVal && String(nomVal).trim() !== '';
+                    });
+
+                    const nbElevesAImporter = lignesDataValides.length;
+                    if (nbElevesAImporter === 0) {
+                        alert('Aucune donnée élève trouvée dans le fichier.');
+                        return;
+                    }
+
+                    // Toujours reconstruire le tableau avec le bon nombre d'élèves et les bonnes matières
+                    document.getElementById('nb-eleves').value = nbElevesAImporter;
+                    buildTable();
 
                     const lignes = document.querySelectorAll('#table-body tr');
                     let lignesImportees = 0;
+                    let notesImportees = 0;
 
                     lignesDataValides.forEach((row) => {
-                        const nomPrenom = String(row[0]).trim();
-                        let sexe = row[1] ? String(row[1]).trim().toUpperCase() : '';
-
-                        // Normalisation du sexe
-                        if(sexe.startsWith('M') || sexe.startsWith('G')) sexe = 'G';
-                        else if(sexe.startsWith('F')) sexe = 'F';
+                        const nomPrenom = String(avecHeaders ? row[nomIdx] : row[0]).trim();
+                        let sexeRaw = avecHeaders ? row[sexeIdx] : row[1];
+                        let sexe = sexeRaw ? String(sexeRaw).trim().toUpperCase() : '';
+                        if (sexe.startsWith('M') || sexe.startsWith('G')) sexe = 'G';
+                        else if (sexe.startsWith('F')) sexe = 'F';
                         else sexe = '';
 
                         const ligneTableau = lignes[lignesImportees];
-                        if(!ligneTableau) return;
+                        if (!ligneTableau) return;
 
                         // Remplir nom
                         const inputNom = ligneTableau.querySelector('input[type="text"]');
-                        if(inputNom) inputNom.value = nomPrenom;
+                        if (inputNom) inputNom.value = nomPrenom;
 
                         // Remplir sexe
                         const selectSexe = ligneTableau.querySelector('select');
-                        if(selectSexe) selectSexe.value = sexe;
+                        if (selectSexe) selectSexe.value = sexe;
 
-                        // Format 2 : remplir les notes (colonnes 2 à 10)
-                        if(avecNotes){
-                            const noteInputs = ligneTableau.querySelectorAll('input[type="number"]');
-                            for(let m = 0; m < 9; m++){
-                                if(noteInputs[m]){
-                                    const valBrut = row[m + 2];
-                                    if(valBrut !== undefined && valBrut !== null && valBrut !== ''){
-                                        const val = parseFloat(valBrut);
-                                        noteInputs[m].value = isNaN(val) ? '' : Math.min(20, Math.max(0, val));
+                        // Remplir les notes par correspondance d'en-tête
+                        const noteInputs = ligneTableau.querySelectorAll('input[type="number"]');
+                        if (avecHeaders) {
+                            matieresColIdx.forEach((colIdx, matPos) => {
+                                if (colIdx >= 0 && noteInputs[matPos]) {
+                                    const valBrut = row[colIdx];
+                                    if (valBrut !== undefined && valBrut !== null && String(valBrut).trim() !== '') {
+                                        const val = parseFloat(String(valBrut).replace(',', '.'));
+                                        noteInputs[matPos].value = isNaN(val) ? '' : Math.min(20, Math.max(0, val));
+                                        notesImportees++;
                                     } else {
-                                        noteInputs[m].value = '';
+                                        noteInputs[matPos].value = '';
                                     }
+                                }
+                            });
+                        } else {
+                            // Ancien format : colonnes 2 à N = notes dans l'ordre
+                            for (let m = 0; m < noteInputs.length; m++) {
+                                const valBrut = row[m + 2];
+                                if (valBrut !== undefined && valBrut !== null && String(valBrut).trim() !== '') {
+                                    const val = parseFloat(String(valBrut).replace(',', '.'));
+                                    noteInputs[m].value = isNaN(val) ? '' : Math.min(20, Math.max(0, val));
+                                    notesImportees++;
+                                } else {
+                                    noteInputs[m].value = '';
                                 }
                             }
                         }
@@ -4471,15 +4768,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     // Recalcul complet
-                    if(typeof recalcAll === 'function') recalcAll();
+                    if (typeof recalcAll === 'function') recalcAll();
 
-                    const modeMsg = avecNotes
-                        ? `Format détecté : Nom + Sexe + Notes (${9} matières).\nTotaux, moyennes, rangs et seuils recalculés.`
-                        : `Format détecté : Nom + Sexe uniquement.`;
+                    const modeMsg = avecHeaders
+                        ? `Format reconnu : en-têtes détectés.\n${notesImportees > 0 ? notesImportees + ' note(s) importée(s) par correspondance de colonnes.' : 'Noms et sexes importés (aucune note dans le fichier).'}`
+                        : `Format ancien (sans en-têtes) : ${notesImportees > 0 ? 'Noms, sexes et notes importés.' : 'Noms et sexes importés uniquement.'}`;
 
                     alert(`✅ Importation terminée : ${lignesImportees} élève(s) importé(s).\n\n${modeMsg}`);
 
-                } catch(error){
+                } catch (error) {
                     console.error(error);
                     alert("Erreur lors de l'importation du fichier Excel.\nVérifiez que le fichier est au bon format.");
                 }
