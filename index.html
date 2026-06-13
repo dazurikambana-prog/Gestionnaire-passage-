@@ -7403,23 +7403,30 @@ function releveGenererGroupé() {
   /* ── Bloc infos générales ── */
   .rm-info-grid {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    width: 100%;
   }
   .rm-info-field {
-    display: flex; flex-direction: row; align-items: center; gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 140px;
+    min-width: 120px;
   }
   .rm-info-field label {
-    font-size: .85rem; font-weight: 800; color: #1565c0;
+    font-size: .78rem; font-weight: 800; color: #1565c0;
     text-transform: uppercase; letter-spacing: .5px;
-    white-space: nowrap; min-width: 160px;
+    white-space: nowrap;
   }
   .rm-info-field input {
     border: 1.5px solid #c5d8f0; border-radius: 6px;
     padding: 7px 10px; font-size: .9rem; background: #fff;
     transition: border-color .2s;
     font-family: Arial, sans-serif;
-    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
   }
   .rm-info-field input:focus { outline: none; border-color: #1565c0; }
 
