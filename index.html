@@ -1092,6 +1092,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div class="tab" onclick="showTab('cep',this)">⑤ Examen Blanc CEP</div>
     <div class="tab" onclick="showTab('pdfCsv',this)">⑥ Conversion 3.0</div>
     <div class="tab" onclick="showTab('releveNotesCep',this)">⑦ Relevé de Notes CEP</div>
+    <div class="tab" onclick="showTab('relevesMensuels',this)">⑧ Relevés Mensuels</div>
   </div>
 
   <!-- ═══════ TAB 1 : SAISIE ═══════ -->
@@ -1509,7 +1510,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           <div><label style="opacity:.8;font-size:11px;">Centre</label><br>
             <input id="cep-centre" type="text"  style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-weight:bold;font-size:13px;color:#333;margin-top:3px;">
           </div>
-          <div><label style="opacity:.8;font-size:11px;">Chef de Centre</label><br>
+          <div><label style="opacity:.8;font-size:11px;">Chef Centre</label><br>
             <input id="cep-chef" type="text"  style="width:100%;padding:5px 8px;border-radius:5px;border:none;font-weight:bold;font-size:13px;color:#333;margin-top:3px;">
           </div>
           <div><label style="opacity:.8;font-size:11px;">CEP BLANC Nº</label><br>
@@ -1849,7 +1850,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
       <!-- SECTION : SIGNATURE DIGITALE -->
       <div style="background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;">
-        <div style="background:#37474f;color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">✍️ Signature digitale du Chef de Centre</div>
+        <div style="background:#37474f;color:#fff;padding:12px 18px;font-weight:bold;font-size:14px;">✍️ Signature digitale du Chef Centre</div>
         <div style="padding:18px;">
           <div style="font-size:13px;color:#555;margin-bottom:12px;">Dessinez votre signature <strong>une seule fois</strong> dans le cadre ci-dessous (souris ou doigt). Elle sera automatiquement apposée sur tous les relevés générés.</div>
           <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
@@ -3168,20 +3169,20 @@ function generateBulletinsPdf(rows, indices, single) {
 
     // ── EN-TÊTE PREMIUM ──
     doc.setFillColor(...vert);
-    doc.rect(0, 0, W, 28, 'F');
+    doc.rect(0, 0, W, 26, 'F');
     doc.setFillColor(...or);
-    doc.rect(0, 28, W, 2.5, 'F');
+    doc.rect(0, 26, W, 2.5, 'F');
 
     // Bande déco gauche
     doc.setFillColor(...or);
-    doc.rect(0, 0, 4, 28, 'F');
+    doc.rect(0, 0, 4, 26, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    doc.setFontSize(19);
     doc.setFont('helvetica', 'bold');
     doc.text('BULLETIN DE NOTES', W/2, 10, { align: 'center' });
 
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(201, 151, 44);
     doc.text('EVALUATION SOMMATIVE  -  ETAPE ' + etape + '  -  ANNEE SCOLAIRE ' + cleanForPdf(annee), W/2, 17, { align: 'center' });
@@ -3194,45 +3195,45 @@ function generateBulletinsPdf(rows, indices, single) {
       epp ? 'EPP: ' + cleanForPdf(epp) : '',
       cours ? 'Cours: ' + cleanForPdf(cours) : ''
     ].filter(Boolean).join('   |   ');
-    doc.text(institutionTxt, W/2, 24, { align: 'center' });
+    doc.text(institutionTxt, W/2, 23, { align: 'center' });
 
     // ── FICHE ÉLÈVE ──
-    let y = 37;
+    let y = 34;
     doc.setFillColor(240, 248, 243);
-    doc.roundedRect(8, y, W - 16, 26, 4, 4, 'F');
+    doc.roundedRect(8, y, W - 16, 24, 3, 3, 'F');
     doc.setDrawColor(...vert);
     doc.setLineWidth(0.7);
-    doc.roundedRect(8, y, W - 16, 26, 4, 4, 'S');
+    doc.roundedRect(8, y, W - 16, 24, 3, 3, 'S');
 
     // Labels
     doc.setTextColor(...vert);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.text('NOM ET PRENOMS', 14, y + 8);
-    doc.text('SEXE', 116, y + 8);
-    doc.text('RANG', 143, y + 8);
-    doc.text('SEUIL', 170, y + 8);
+    doc.text('NOM ET PRENOMS', 14, y + 7);
+    doc.text('SEXE', 116, y + 7);
+    doc.text('RANG', 143, y + 7);
+    doc.text('SEUIL', 170, y + 7);
 
     // Séparateurs verticaux
     doc.setDrawColor(200, 220, 210);
     doc.setLineWidth(0.4);
-    doc.line(113, y + 2, 113, y + 24);
-    doc.line(140, y + 2, 140, y + 24);
-    doc.line(167, y + 2, 167, y + 24);
+    doc.line(113, y + 2, 113, y + 22);
+    doc.line(140, y + 2, 140, y + 22);
+    doc.line(167, y + 2, 167, y + 22);
 
     // Valeurs
     doc.setTextColor(15, 15, 15);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(cleanForPdf(nom) || '—', 14, y + 19);
+    doc.text(cleanForPdf(nom) || '—', 14, y + 18);
     doc.setFontSize(11);
-    doc.text(sexe || '—', 116 + (113-116)/2 + 3, y + 19, { align: 'center' });
-    doc.text(cleanForPdf(rang), 153, y + 19, { align: 'center' });
+    doc.text(sexe || '—', 116 + (113-116)/2 + 3, y + 18, { align: 'center' });
+    doc.text(cleanForPdf(rang), 153, y + 18, { align: 'center' });
     const isAdmis = seuilTxt === 'OUI';
     doc.setTextColor(isAdmis ? 26 : 192, isAdmis ? 71 : 57, isAdmis ? 49 : 43);
-    doc.text(seuilTxt, 184, y + 19, { align: 'center' });
+    doc.text(seuilTxt, 184, y + 18, { align: 'center' });
 
-    y += 32;
+    y += 28;
 
     // ── TABLEAU DES NOTES ──
     const noteRows = currentMatieres.map((matName, idx) => {
@@ -3247,12 +3248,12 @@ function generateBulletinsPdf(rows, indices, single) {
       startY: y,
       head: [['Matière', 'Note', 'Max', 'Appréciation']],
       body: noteRows,
-      styles: { fontSize: 10, cellPadding: 3.5, valign: 'middle' },
+      styles: { fontSize: 9.5, cellPadding: 2.8, valign: 'middle' },
       headStyles: {
         fillColor: vert,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 10,
+        fontSize: 9.5,
         halign: 'center'
       },
       alternateRowStyles: { fillColor: creme },
@@ -3288,13 +3289,13 @@ function generateBulletinsPdf(rows, indices, single) {
       }
     });
 
-    y = doc.lastAutoTable.finalY + 5;
+    y = doc.lastAutoTable.finalY + 4;
 
     // ── BLOC RÉSUMÉ ──
     doc.setFillColor(...vert);
-    doc.roundedRect(8, y, W - 16, 26, 4, 4, 'F');
+    doc.roundedRect(8, y, W - 16, 24, 3, 3, 'F');
     doc.setFillColor(...or);
-    doc.roundedRect(8, y, 4, 26, 2, 0, 'F');
+    doc.roundedRect(8, y, 4, 24, 2, 0, 'F');
 
     const cols = [
       { label: 'TOTAL', value: cleanForPdf(total) },
@@ -3319,10 +3320,10 @@ function generateBulletinsPdf(rows, indices, single) {
       } else {
         doc.setTextColor(255, 255, 255);
       }
-      doc.text(col.value || '—', cx, y + 19, { align: 'center' });
+      doc.text(col.value || '—', cx, y + 18, { align: 'center' });
     });
 
-    y += 30;
+    y += 27;
 
     // ── STATS DE CLASSE ──
     const statsItems2 = [
@@ -3353,13 +3354,13 @@ function generateBulletinsPdf(rows, indices, single) {
       doc.text(si2.value, cx, y + 11.5, { align: 'center' });
     });
 
-    y += 18;
+    y += 17;
 
     // ── OBSERVATION DE L'ENSEIGNANT(E) ──
     const obsText = generateObservationEleve(noteRows, moy, isAdmis, sexe, seuilVal);
     const obsJustifyW = W - 32;
     const obsLines = doc.splitTextToSize(cleanForPdf(obsText), obsJustifyW);
-    const obsH = Math.max(obsLines.length * 4.4 + 12, 18);
+    const obsH = Math.max(obsLines.length * 4.2 + 11, 17);
     doc.setFillColor(250, 248, 235);
     doc.roundedRect(8, y, W - 16, obsH, 3, 3, 'F');
     doc.setDrawColor(...or);
@@ -3372,33 +3373,31 @@ function generateBulletinsPdf(rows, indices, single) {
     doc.setFont('helvetica', 'bold');
     doc.text('OBSERVATION DE L\'ENSEIGNANT(E)', 14, y + 5.5);
     doc.setTextColor(40, 40, 40);
-    doc.setFontSize(8.2);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    justifyText(doc, obsLines, 14, y + 10.5, obsJustifyW, 4.4);
+    justifyText(doc, obsLines, 14, y + 10, obsJustifyW, 4.2);
     y += obsH + 5;
 
-    // ── SIGNATURES ──
+    // ── SIGNATURES ── (toujours sur la même page)
     const sigY = Math.max(y + 8, 235);
-    doc.setDrawColor(...vert);
-    doc.setLineWidth(0.6);
-    doc.line(22, sigY, 88, sigY);
-    doc.line(122, sigY, 188, sigY);
-
+    // Titre en haut
     doc.setTextColor(...vert);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text("L'Administrateur / L'Administratrice", 55, sigY + 5, { align: 'center' });
-    doc.text("Le Directeur / La Directrice", 155, sigY + 5, { align: 'center' });
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(80, 80, 80);
+    doc.text("L'Administrateur / L'Administratrice", 55, sigY, { align: 'center' });
+    doc.text("Le Directeur / La Directrice", 155, sigY, { align: 'center' });
+    // Espace vide pour signature manuscrite (20 mm)
+    // Trait de signature
+    doc.setDrawColor(...vert);
+    doc.setLineWidth(0.6);
+    doc.line(22, sigY + 20, 88, sigY + 20);
+    doc.line(122, sigY + 20, 188, sigY + 20);
+    // Nom en bas
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 30, 30);
     doc.setFontSize(8.5);
-    doc.text(cleanForPdf(adminName) || '—', 55, sigY + 11, { align: 'center' });
-    doc.text(cleanForPdf(directeurName) || '—', 155, sigY + 11, { align: 'center' });
-    // Espace pour signature manuscrite
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(22, sigY + 22, 88, sigY + 22);
-    doc.line(122, sigY + 22, 188, sigY + 22);
+    doc.text(cleanForPdf(adminName) || '—', 55, sigY + 26, { align: 'center' });
+    doc.text(cleanForPdf(directeurName) || '—', 155, sigY + 26, { align: 'center' });
 
     // ── PIED DE PAGE ──
     doc.setFillColor(...vert);
@@ -4487,25 +4486,23 @@ function exportPassageBulletinsPdf() {
 
     // ── SIGNATURES ──
     const sigY = Math.max(y + 10, 248);
-    doc.setDrawColor(...vert);
-    doc.setLineWidth(0.6);
-    doc.line(22, sigY, 88, sigY);
-    doc.line(122, sigY, 188, sigY);
+    // Titre en haut
     doc.setTextColor(...vert);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text("L'Administrateur / L'Administratrice", 55, sigY + 5, { align: 'center' });
-    doc.text('Le Directeur / La Directrice', 155, sigY + 5, { align: 'center' });
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(80, 80, 80);
+    doc.text("L'Administrateur / L'Administratrice", 55, sigY, { align: 'center' });
+    doc.text('Le Directeur / La Directrice', 155, sigY, { align: 'center' });
+    // Espace vide pour signature manuscrite (20 mm)
+    // Nom en bas
+    doc.setDrawColor(...vert);
+    doc.setLineWidth(0.6);
+    doc.line(22, sigY + 20, 88, sigY + 20);
+    doc.line(122, sigY + 20, 188, sigY + 20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 30, 30);
     doc.setFontSize(8.5);
-    doc.text(cleanForPdf(adminName) || '—', 55, sigY + 11, { align: 'center' });
-    doc.text(cleanForPdf(directeurName) || '—', 155, sigY + 11, { align: 'center' });
-    // Espace pour signature manuscrite
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(22, sigY + 22, 88, sigY + 22);
-    doc.line(122, sigY + 22, 188, sigY + 22);
+    doc.text(cleanForPdf(adminName) || '—', 55, sigY + 26, { align: 'center' });
+    doc.text(cleanForPdf(directeurName) || '—', 155, sigY + 26, { align: 'center' });
 
     // ── PIED DE PAGE ──
     doc.setFillColor(...vert);
@@ -7228,54 +7225,50 @@ function releveBuildPage(doc, student, info, isFirst) {
 
   y += 30;
 
-  // ── SIGNATURE ──
-  // Ancrage : sigY = ligne horizontale de signature.
-  // - Cible : H - 45 = 252mm (laisse ~34mm libres avant le pied de page).
-  // - Minimum : y + 22 pour ne jamais chevaucher le bloc résumé.
-  // - Maximum : H - 32 = 265mm pour garantir ≥ 21mm de marge avant le pied de page.
-  const sigY = Math.min(Math.max(y + 22, H - 45), H - 32);
+  // ── SIGNATURE ── ordre officiel : Titre → espace/image → trait → Nom
+  // sigY = position du TITRE en haut du bloc (bloc total ~38mm)
+  const sigY = Math.min(Math.max(y + 10, H - 58), H - 46);
 
-  // Image de signature au-dessus de la ligne (occupe 24mm de hauteur)
+  // 1. TITRE en haut
+  doc.setTextColor(...bleu);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Le Chef Centre', 159, sigY, { align: 'center' });
+
+  // 2. ESPACE — image de signature ou zone pointillée (20mm)
   if (releveSigDataUrl) {
     try {
-      doc.addImage(releveSigDataUrl, 'PNG', 127, sigY - 26, 64, 24);
+      doc.addImage(releveSigDataUrl, 'PNG', 127, sigY + 4, 64, 18);
     } catch(e) {}
   } else {
-    // Zone réservée en pointillés si pas de signature
     doc.setDrawColor(190, 190, 190);
     doc.setLineWidth(0.25);
     doc.setLineDashPattern([1, 1.5], 0);
-    doc.rect(127, sigY - 24, 64, 22, 'S');
+    doc.rect(127, sigY + 4, 64, 18, 'S');
     doc.setLineDashPattern([], 0);
     doc.setTextColor(190, 190, 190);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'italic');
-    doc.text('Signature', 159, sigY - 12, { align: 'center' });
+    doc.text('Signature', 159, sigY + 14, { align: 'center' });
   }
 
-  // Ligne horizontale de signature
+  // 3. TRAIT — 24mm sous le titre
   doc.setDrawColor(...bleu);
   doc.setLineWidth(0.6);
-  doc.line(122, sigY, 196, sigY);
+  doc.line(122, sigY + 24, 196, sigY + 24);
 
-  // "Le Chef de Centre" — 7mm sous la ligne
-  doc.setTextColor(...bleu);
-  doc.setFontSize(9);
+  // 4. NOM — 6mm sous le trait
   doc.setFont('helvetica', 'bold');
-  doc.text('Le Chef de Centre', 159, sigY + 7, { align: 'center' });
-
-  // Nom — 14mm sous la ligne
-  doc.setFont('helvetica', 'italic');
-  doc.setTextColor(50, 50, 50);
+  doc.setTextColor(30, 30, 30);
   doc.setFontSize(8.5);
-  doc.text(cleanForPdf(info.chef) || '\u2014', 159, sigY + 14, { align: 'center' });
+  doc.text(cleanForPdf(info.chef) || '\u2014', 159, sigY + 30, { align: 'center' });
 
-  // Date — 21mm sous la ligne (si renseignée)
+  // Date — 7mm sous le nom (si renseignée)
   if (info.dateSig) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(110, 110, 110);
-    doc.text(cleanForPdf(info.dateSig), 159, sigY + 21, { align: 'center' });
+    doc.text(cleanForPdf(info.dateSig), 159, sigY + 37, { align: 'center' });
   }
 
   // ── PIED DE PAGE BLEU ──
@@ -7368,6 +7361,827 @@ function releveGenererGroupé() {
       }
     };
   }
+})();
+
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ONGLET 8 — RELEVÉS MENSUELS
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="tab-content" id="tab-relevesMensuels">
+<style>
+  /* ── Onglet 8 : Relevés Mensuels ── */
+  #tab-relevesMensuels {
+    font-family: Arial, sans-serif;
+    padding: 18px 22px 32px;
+    background: #f7f9fc;
+    min-height: 100vh;
+  }
+  .rm-header {
+    background: linear-gradient(135deg, #1a4f8a 0%, #1565c0 60%, #1976d2 100%);
+    border-radius: 12px;
+    padding: 22px 28px 18px;
+    color: #fff;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(21,101,192,.25);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .rm-header-icon {
+    font-size: 2.4rem;
+    flex-shrink: 0;
+    background: rgba(255,255,255,.15);
+    border-radius: 50%;
+    width: 58px; height: 58px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rm-header h2 { margin: 0 0 4px; font-size: 1.35rem; font-weight: 700; letter-spacing: .4px; }
+  .rm-header p  { margin: 0; font-size: .83rem; opacity: .82; }
+
+  /* ── Bloc infos générales ── */
+  .rm-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rm-info-field {
+    display: flex; flex-direction: row; align-items: center; gap: 10px;
+  }
+  .rm-info-field label {
+    font-size: .85rem; font-weight: 800; color: #1565c0;
+    text-transform: uppercase; letter-spacing: .5px;
+    white-space: nowrap; min-width: 160px;
+  }
+  .rm-info-field input {
+    border: 1.5px solid #c5d8f0; border-radius: 6px;
+    padding: 7px 10px; font-size: .9rem; background: #fff;
+    transition: border-color .2s;
+    font-family: Arial, sans-serif;
+    flex: 1;
+  }
+  .rm-info-field input:focus { outline: none; border-color: #1565c0; }
+
+  /* ── Carte tableau ── */
+  .rm-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(21,101,192,.10);
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .rm-card-title {
+    background: #1565c0;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 10px 18px;
+  }
+
+  /* ── Tableau ── */
+  .rm-table-wrap { overflow-x: auto; }
+  table.rm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .8rem;
+    font-family: Arial, sans-serif;
+  }
+  table.rm-table thead tr:first-child th {
+    background: #1a4f8a;
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    padding: 9px 6px;
+    border: 1px solid #1565c0;
+    font-size: .75rem;
+    line-height: 1.3;
+  }
+  table.rm-table thead tr:last-child th {
+    background: #1976d2;
+    color: #e8f0fe;
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 4px;
+    border: 1px solid #1565c0;
+    font-size: .72rem;
+    line-height: 1.35;
+  }
+  table.rm-table tbody td {
+    border: 1px solid #d0dff0;
+    padding: 5px 4px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  table.rm-table tbody tr:nth-child(even) td { background: #f0f6ff; }
+  table.rm-table tbody tr:nth-child(odd)  td { background: #fff; }
+  table.rm-table tbody tr:hover td { background: #ddeeff; }
+
+  /* Colonne Mois */
+  table.rm-table td.rm-mois {
+    font-weight: 700; color: #1a4f8a; text-align: center;
+    background: #e8f0fe !important; font-size: .82rem;
+    white-space: nowrap;
+  }
+  /* Colonnes calculées (read-only) */
+  table.rm-table td.rm-calc {
+    background: #f0f6ff !important;
+    color: #1565c0; font-weight: 600;
+    font-size: .82rem;
+  }
+  table.rm-table td.rm-pct {
+    background: #e8f4e8 !important;
+    color: #2e7d32; font-weight: 700;
+    font-size: .82rem;
+  }
+  /* Ligne TOTAL */
+  table.rm-table tr.rm-total td {
+    background: #1a4f8a !important;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: .82rem;
+  }
+  table.rm-table tr.rm-total td.rm-mois {
+    background: #1a4f8a !important; color: #fff !important;
+  }
+  table.rm-table tr.rm-total td.rm-pct {
+    background: #1a4f8a !important; color: #ffd54f !important;
+  }
+  /* Ligne MOYENNE */
+  table.rm-table tr.rm-moyenne td {
+    background: #283593 !important;
+    color: #e8f0fe !important;
+    font-weight: 700;
+    font-size: .82rem;
+  }
+  table.rm-table tr.rm-moyenne td.rm-pct {
+    color: #ffd54f !important;
+  }
+
+  /* Inputs dans le tableau */
+  table.rm-table input.rm-input {
+    width: 70px; max-width: 100%;
+    border: 1px solid #b0c8e8; border-radius: 4px;
+    padding: 4px 5px; font-size: .82rem;
+    text-align: center; background: #fff;
+    font-family: Arial, sans-serif;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  table.rm-table input.rm-input:focus {
+    outline: none; border-color: #1565c0;
+    box-shadow: 0 0 0 2px rgba(21,101,192,.15);
+  }
+  table.rm-table tr.rm-total input.rm-input,
+  table.rm-table tr.rm-moyenne input.rm-input {
+    display: none;
+  }
+
+  /* ── Barre d'actions ── */
+  .rm-actions {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: center; margin-bottom: 16px;
+  }
+  .rm-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 8px;
+    font-weight: 700; font-size: .85rem;
+    cursor: pointer; border: none;
+    transition: background .18s, transform .12s, box-shadow .18s;
+    font-family: Arial, sans-serif;
+  }
+  .rm-btn:active { transform: scale(.97); }
+  .rm-btn-save {
+    background: #1565c0; color: #fff;
+    box-shadow: 0 2px 8px rgba(21,101,192,.3);
+  }
+  .rm-btn-save:hover { background: #1a4f8a; }
+  .rm-btn-pdf {
+    background: #c62828; color: #fff;
+    box-shadow: 0 2px 8px rgba(198,40,40,.25);
+  }
+  .rm-btn-pdf:hover { background: #b71c1c; }
+  .rm-btn-clear {
+    background: #fff; color: #757575;
+    border: 1.5px solid #bdbdbd;
+  }
+  .rm-btn-clear:hover { background: #f5f5f5; }
+  .rm-status {
+    font-size: .8rem; color: #388e3c; font-weight: 600;
+    display: none; padding: 4px 10px;
+    background: #e8f5e9; border-radius: 6px;
+  }
+</style>
+
+<!-- En-tête -->
+<div class="rm-header">
+  <div class="rm-header-icon">📅</div>
+  <div>
+    <h2>Tableau de Relevés Mensuels</h2>
+    <p>Suivi mensuel des présences — Données sauvegardées dans le navigateur · Export PDF disponible</p>
+  </div>
+</div>
+
+<!-- Informations générales -->
+<div class="rm-card" style="margin-bottom:18px;">
+  <div class="rm-card-title">📋 Renseignements généraux</div>
+  <div style="padding:22px 24px 22px; display:flex; align-items:center; justify-content:center;">
+    <div class="rm-info-grid">
+      <div class="rm-info-field">
+        <label>ANNÉE SCOLAIRE</label>
+        <input type="text" id="rm-annee" placeholder="">
+      </div>
+      <div class="rm-info-field">
+        <label>COURS</label>
+        <input type="text" id="rm-classe" placeholder="">
+      </div>
+      <div class="rm-info-field">
+        <label>DDEMP</label>
+        <input type="text" id="rm-ddemp" placeholder="">
+      </div>
+      <div class="rm-info-field">
+        <label>CS</label>
+        <input type="text" id="rm-dist" placeholder="">
+      </div>
+      <div class="rm-info-field">
+        <label>ÉCOLE</label>
+        <input type="text" id="rm-ecole" placeholder="">
+      </div>
+      <div class="rm-info-field">
+        <label>LE / LA TITULAIRE</label>
+        <input type="text" id="rm-enseignant" placeholder="">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="rm-actions">
+  <button class="rm-btn rm-btn-save" onclick="rmSauvegarder()">
+    💾 Sauvegarder
+  </button>
+  <button class="rm-btn rm-btn-pdf" onclick="rmExporterPDF()">
+    📄 Télécharger PDF
+  </button>
+  <button class="rm-btn rm-btn-clear" onclick="rmEffacer()">
+    🗑️ Réinitialiser
+  </button>
+  <span class="rm-status" id="rm-status">✅ Données sauvegardées.</span>
+</div>
+
+<!-- Tableau principal -->
+<div class="rm-card">
+  <div class="rm-card-title">📊 TABLEAU DE RELEVÉS MENSUELS POUR L'ANNÉE SCOLAIRE</div>
+  <div class="rm-table-wrap">
+    <table class="rm-table" id="rm-tableau">
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:55px;">Mois</th>
+          <th style="width:85px;">NOMBRE des<br>demi-jours de<br>classe du mois</th>
+          <th style="width:90px;">TOTAL des élèves<br>qui ont fréquenté<br>la classe pendant<br>le mois</th>
+          <th style="width:90px;">TOTAL des<br>présences possibles<br>par demi-jours<br>de classe</th>
+          <th style="width:85px;">TOTAL des<br>absences<br>du mois</th>
+          <th style="width:90px;">TOTAL des<br>présences<br>effectives</th>
+          <th style="width:85px;">POURCENTAGE<br>des présences<br>effectives<br>dans le mois</th>
+          <th style="width:100px;">NOMBRE d'élèves<br>n'ayant jamais<br>manqué la classe<br>ou n'ayant pas<br>manqué plus de<br>4 fois</th>
+          <th style="width:90px;">NOMBRE d'élèves<br>ayant manqué<br>plus de 4 fois</th>
+          <th style="width:90px;">TOTAL des<br>absences<br>imputables aux<br>élèves de la<br>colonne précédente</th>
+        </tr>
+      </thead>
+      <tbody id="rm-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /tab-relevesMensuels -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  ONGLET 8 — RELEVÉS MENSUELS  (sauvegarde localStorage + PDF)
+// ═══════════════════════════════════════════════════════════════
+
+const RM_MOIS = ['SEPT.','OCT.','NOV.','DÉC.','JAN.','FÉV.','MARS','AVRIL','MAI','JUIN'];
+const RM_KEY  = 'rm_data_v1';
+
+// ── Construction du tableau ──
+function rmBuildTable() {
+  const tbody = document.getElementById('rm-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  RM_MOIS.forEach(function(mois, i) {
+    const r = document.createElement('tr');
+    r.innerHTML =
+      '<td class="rm-mois">' + mois + '</td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-b-'+i+'" oninput="rmCalc('+i+')" placeholder="0"></td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-c-'+i+'" oninput="rmCalc('+i+')" placeholder="0"></td>' +
+      '<td class="rm-calc" id="rm-d-'+i+'">—</td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-e-'+i+'" oninput="rmCalc('+i+')" placeholder="0"></td>' +
+      '<td class="rm-calc" id="rm-f-'+i+'">—</td>' +
+      '<td class="rm-pct"  id="rm-g-'+i+'">—</td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-h-'+i+'" placeholder="0" oninput="rmCalcTotaux()"></td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-ii-'+i+'" placeholder="0" oninput="rmCalcTotaux()"></td>' +
+      '<td><input class="rm-input" type="number" min="0" id="rm-j-'+i+'" placeholder="0" oninput="rmCalcTotaux()"></td>';
+    tbody.appendChild(r);
+  });
+
+  // Ligne TOTAL
+  const tTotal = document.createElement('tr');
+  tTotal.className = 'rm-total';
+  tTotal.innerHTML =
+    '<td class="rm-mois">TOTAL</td>' +
+    '<td id="rm-tot-b">—</td>' +
+    '<td id="rm-tot-c">—</td>' +
+    '<td class="rm-calc" id="rm-tot-d">—</td>' +
+    '<td id="rm-tot-e">—</td>' +
+    '<td class="rm-calc" id="rm-tot-f">—</td>' +
+    '<td class="rm-pct"  id="rm-tot-g">—</td>' +
+    '<td id="rm-tot-h">—</td>' +
+    '<td id="rm-tot-ii">—</td>' +
+    '<td id="rm-tot-j">—</td>';
+  tbody.appendChild(tTotal);
+
+  // Ligne MOYENNE
+  const tMoy = document.createElement('tr');
+  tMoy.className = 'rm-moyenne';
+  tMoy.innerHTML =
+    '<td class="rm-mois">MOYENNE<br>GÉNÉRALE</td>' +
+    '<td id="rm-moy-b">—</td>' +
+    '<td id="rm-moy-c">—</td>' +
+    '<td class="rm-calc" id="rm-moy-d">—</td>' +
+    '<td id="rm-moy-e">—</td>' +
+    '<td class="rm-calc" id="rm-moy-f">—</td>' +
+    '<td class="rm-pct"  id="rm-moy-g">—</td>' +
+    '<td id="rm-moy-h">—</td>' +
+    '<td id="rm-moy-ii">—</td>' +
+    '<td id="rm-moy-j">—</td>';
+  tbody.appendChild(tMoy);
+}
+
+// ── Calculs sur une ligne ──
+function rmCalc(i) {
+  const b = parseFloat(document.getElementById('rm-b-'+i)?.value) || 0;
+  const c = parseFloat(document.getElementById('rm-c-'+i)?.value) || 0;
+  const e = parseFloat(document.getElementById('rm-e-'+i)?.value) || 0;
+  const d = b * c;
+  const f = d - e;
+  const g = d > 0 ? (f / d * 100) : 0;
+
+  const dEl = document.getElementById('rm-d-'+i);
+  const fEl = document.getElementById('rm-f-'+i);
+  const gEl = document.getElementById('rm-g-'+i);
+
+  if (dEl) dEl.textContent = (b || c) ? d : '—';
+  if (fEl) fEl.textContent = (d || e) ? f : '—';
+  if (gEl) gEl.textContent = d > 0 ? g.toFixed(2).replace('.',',') + ' %' : '—';
+
+  rmCalcTotaux();
+}
+
+// ── Calcul totaux et moyennes ──
+function rmCalcTotaux() {
+  const cols = ['b','c','d','e','f','h','ii','j'];
+  const sums = {};
+  const counts = {};
+  cols.forEach(function(k){ sums[k]=0; counts[k]=0; });
+
+  RM_MOIS.forEach(function(_, i) {
+    ['b','c','e','h','ii','j'].forEach(function(k) {
+      const el = document.getElementById('rm-'+k+'-'+i);
+      if (el && el.value !== '') { sums[k] += parseFloat(el.value)||0; counts[k]++; }
+    });
+    ['d','f'].forEach(function(k) {
+      const el = document.getElementById('rm-'+k+'-'+i);
+      if (el && el.textContent !== '—') { sums[k] += parseFloat(el.textContent)||0; counts[k]++; }
+    });
+  });
+
+  // TOTAUX
+  ['b','c','e','h','ii','j'].forEach(function(k) {
+    const el = document.getElementById('rm-tot-'+k);
+    if (el) el.textContent = counts[k] ? sums[k] : '—';
+  });
+  ['d','f'].forEach(function(k) {
+    const el = document.getElementById('rm-tot-'+k);
+    if (el) el.textContent = counts[k] ? sums[k] : '—';
+  });
+  // % total
+  const gTot = document.getElementById('rm-tot-g');
+  if (gTot) {
+    gTot.textContent = sums.d > 0 ? (sums.f / sums.d * 100).toFixed(2).replace('.',',') + ' %' : '—';
+  }
+
+  // MOYENNES
+  const n = RM_MOIS.length;
+  ['b','c','e','h','ii','j'].forEach(function(k) {
+    const el = document.getElementById('rm-moy-'+k);
+    if (el) el.textContent = counts[k] ? (sums[k]/n).toFixed(2).replace('.',',') : '—';
+  });
+  ['d','f'].forEach(function(k) {
+    const el = document.getElementById('rm-moy-'+k);
+    if (el) el.textContent = counts[k] ? (sums[k]/n).toFixed(2).replace('.',',') : '—';
+  });
+  const gMoy = document.getElementById('rm-moy-g');
+  if (gMoy) {
+    gMoy.textContent = sums.d > 0 ? (sums.f / sums.d * 100).toFixed(2).replace('.',',') + ' %' : '—';
+  }
+}
+
+// ── Lire toutes les données ──
+function rmGetData() {
+  const rows = [];
+  RM_MOIS.forEach(function(_, i) {
+    rows.push({
+      b: document.getElementById('rm-b-'+i)?.value || '',
+      c: document.getElementById('rm-c-'+i)?.value || '',
+      e: document.getElementById('rm-e-'+i)?.value || '',
+      h: document.getElementById('rm-h-'+i)?.value || '',
+      ii: document.getElementById('rm-ii-'+i)?.value || '',
+      j: document.getElementById('rm-j-'+i)?.value || ''
+    });
+  });
+  return {
+    annee: document.getElementById('rm-annee')?.value || '',
+    classe: document.getElementById('rm-classe')?.value || '',
+    ddemp: document.getElementById('rm-ddemp')?.value || '',
+    dist: document.getElementById('rm-dist')?.value || '',
+    ecole: document.getElementById('rm-ecole')?.value || '',
+    enseignant: document.getElementById('rm-enseignant')?.value || '',
+    rows: rows
+  };
+}
+
+// ── Charger les données ──
+function rmLoadData(data) {
+  if (!data) return;
+  const set = function(id, val) { const el = document.getElementById(id); if(el) el.value = val||''; };
+  set('rm-annee', data.annee);
+  set('rm-classe', data.classe);
+  set('rm-ddemp', data.ddemp);
+  set('rm-dist', data.dist);
+  set('rm-ecole', data.ecole);
+  set('rm-enseignant', data.enseignant);
+  if (data.rows) {
+    data.rows.forEach(function(r, i) {
+      set('rm-b-'+i, r.b);
+      set('rm-c-'+i, r.c);
+      set('rm-e-'+i, r.e);
+      set('rm-h-'+i, r.h);
+      set('rm-ii-'+i, r.ii);
+      set('rm-j-'+i, r.j);
+      rmCalc(i);
+      rmCalc(i);
+    });
+  }
+  rmCalcTotaux();
+}
+
+// ── Sauvegarder ──
+function rmSauvegarder() {
+  try {
+    localStorage.setItem(RM_KEY, JSON.stringify(rmGetData()));
+    const st = document.getElementById('rm-status');
+    if (st) {
+      st.style.display = 'inline-block';
+      setTimeout(function(){ st.style.display = 'none'; }, 3000);
+    }
+  } catch(e) {
+    alert('Erreur lors de la sauvegarde : ' + e.message);
+  }
+}
+
+// ── Réinitialiser ──
+function rmEffacer() {
+  if (!confirm('Réinitialiser toutes les données des relevés mensuels ?')) return;
+  localStorage.removeItem(RM_KEY);
+  rmBuildTable();
+  ['rm-annee','rm-classe','rm-ddemp','rm-dist','rm-ecole','rm-enseignant']
+    .forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+// ── Export PDF ──
+function rmExporterPDF() {
+  if (typeof window.jspdf === 'undefined') {
+    alert('jsPDF non chargé. Veuillez patienter et réessayer.');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const W = 297, H = 210;
+  const bleu      = [21, 101, 192];
+  const bleuFonce = [26, 79, 138];
+  const bleuClair = [100, 180, 255];
+  const vert      = [46, 125, 50];
+
+  const data = rmGetData();
+
+  // ── EN-TÊTE ──
+  doc.setFillColor(...bleuFonce);
+  doc.rect(0, 0, W, 22, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.rect(0, 0, W, 2, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text("TABLEAU DE RELEVÉS MENSUELS POUR L'ANNÉE SCOLAIRE", W / 2, 9, { align: 'center' });
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(189, 226, 255);
+  const anneeLabel = data.annee ? data.annee : '________ — ________';
+  doc.text('Année scolaire : ' + anneeLabel, W / 2, 16.5, { align: 'center' });
+
+  // ── RENSEIGNEMENTS GÉNÉRAUX ──
+  let y = 26;
+  const infoFields = [
+    ['COURS',  data.classe],
+    ['DDEMP',  data.ddemp],
+    ['CS',     data.dist],
+    ['ÉCOLE',  data.ecole]
+  ];
+
+  const boxH = 28;
+  doc.setFillColor(232, 240, 254);
+  doc.roundedRect(6, y, W - 12, boxH, 3, 3, 'F');
+  doc.setDrawColor(...bleu);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(6, y, W - 12, boxH, 3, 3, 'S');
+
+  // Colonne GAUCHE : DDEMP + CS  — texte aligné à gauche
+  // Colonne DROITE : ÉCOLE + COURS — texte aligné à droite
+  const lineH = 8.5;
+  const leftFields  = [['DDEMP', data.ddemp], ['CS', data.dist]];
+  const rightFields = [['ÉCOLE', data.ecole],  ['COURS', data.classe]];
+
+  const leftRows  = leftFields.length;
+  const rightRows = rightFields.length;
+  const leftStart  = y + (boxH - leftRows  * lineH) / 2 + lineH * 0.85;
+  const rightStart = y + (boxH - rightRows * lineH) / 2 + lineH * 0.85;
+
+  const marginL = 12;          // marge gauche du rectangle
+  const marginR = W - 12;      // bord droit du rectangle
+
+  // GAUCHE : DDEMP et CS justifiés à gauche
+  leftFields.forEach(function(pair, idx) {
+    const iy = leftStart + idx * lineH;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...bleu);
+    doc.text(pair[0] + ' :', marginL, iy);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(20, 20, 20);
+    const lw = doc.getTextWidth(pair[0] + ' :  ');
+    doc.text(pair[1] || '—', marginL + lw, iy);
+  });
+
+  // DROITE : ÉCOLE et COURS — labels ancrés au même bord gauche, valeurs alignées
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  // Trouver la largeur du label le plus long pour fixer un ancrage commun
+  const maxLabelW = Math.max(...rightFields.map(function(p) {
+    return doc.getTextWidth(p[0] + ' :');
+  }));
+  // La valeur la plus longue pour calculer le startX tel que tout finisse à marginR
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  const maxValueW = Math.max(...rightFields.map(function(p) {
+    return doc.getTextWidth('  ' + (p[1] || '—'));
+  }));
+  const rightBlockStartX = marginR - maxLabelW - maxValueW;
+
+  rightFields.forEach(function(pair, idx) {
+    const iy = rightStart + idx * lineH;
+    const labelTxt = pair[0] + ' :';
+    const valueTxt = '  ' + (pair[1] || '—');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...bleu);
+    doc.text(labelTxt, rightBlockStartX, iy);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(20, 20, 20);
+    doc.text(valueTxt, rightBlockStartX + maxLabelW, iy);
+  });
+
+  y += boxH + 4;
+
+  // ── TABLEAU DE DONNÉES ──
+  // Collecter les lignes
+  const tableHead = [
+    'Mois',
+    'NOMBRE des\ndemi-jours de\nclasse du mois',
+    'TOTAL des élèves\nqui ont fréquenté\nla classe pendant\nle mois',
+    'TOTAL des\nprésences possibles\npar demi-jours\nde classe',
+    'TOTAL des\nabsences\ndu mois',
+    'TOTAL des\nprésences\neffectives',
+    'POURCENTAGE\ndes présences\neffectives\ndans le mois',
+    "NOMBRE d'élèves\nn'ayant jamais\nmanqué la classe\nou n'ayant pas\nmanqué plus\nde 4 fois",
+    "NOMBRE d'élèves\nayant manqué\nplus de 4 fois",
+    'TOTAL des absences\nimputables aux\nélèves de la\ncolonne précédente'
+  ];
+
+  const bodyRows = [];
+  RM_MOIS.forEach(function(mois, i) {
+    const b = parseFloat(document.getElementById('rm-b-'+i)?.value) || 0;
+    const c = parseFloat(document.getElementById('rm-c-'+i)?.value) || 0;
+    const e = parseFloat(document.getElementById('rm-e-'+i)?.value) || 0;
+    const h = parseFloat(document.getElementById('rm-h-'+i)?.value) || 0;
+    const ii= parseFloat(document.getElementById('rm-ii-'+i)?.value)|| 0;
+    const j = parseFloat(document.getElementById('rm-j-'+i)?.value) || 0;
+    const obs = document.getElementById('rm-obs-'+i)?.value || '';
+    const d = b * c;
+    const f = d - e;
+    const g = d > 0 ? (f / d * 100).toFixed(2).replace('.',',') + ' %' : '—';
+    bodyRows.push([
+      mois,
+      b || '—', c || '—', d || '—', e || '—', f || '—', g,
+      h || '—', ii || '—', j || '—'
+    ]);
+  });
+
+  // Totaux
+  const sumB  = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-b-'+i)?.value)||0);},0);
+  const sumC  = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-c-'+i)?.value)||0);},0);
+  const sumE  = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-e-'+i)?.value)||0);},0);
+  const sumH  = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-h-'+i)?.value)||0);},0);
+  const sumII = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-ii-'+i)?.value)||0);},0);
+  const sumJ  = RM_MOIS.reduce(function(s,_,i){ return s+(parseFloat(document.getElementById('rm-j-'+i)?.value)||0);},0);
+  const sumD  = sumB > 0 && sumC > 0 ? sumB * sumC / RM_MOIS.length * RM_MOIS.length : 0;
+  // Recalcul correct : somme des D individuels
+  const sumDreal = RM_MOIS.reduce(function(s,_,i){
+    const b=(parseFloat(document.getElementById('rm-b-'+i)?.value)||0);
+    const c=(parseFloat(document.getElementById('rm-c-'+i)?.value)||0);
+    return s + b*c;
+  },0);
+  const sumF = sumDreal - sumE;
+  const pctTot = sumDreal > 0 ? (sumF / sumDreal * 100).toFixed(2).replace('.',',') + ' %' : '—';
+  const n = RM_MOIS.length;
+
+  bodyRows.push([
+    'TOTAL',
+    sumB||'—', sumC||'—', sumDreal||'—', sumE||'—', sumF||'—', pctTot,
+    sumH||'—', sumII||'—', sumJ||'—'
+  ]);
+  bodyRows.push([
+    'MOYENNE\nGÉN.',
+    (sumB/n).toFixed(1).replace('.',','),
+    (sumC/n).toFixed(1).replace('.',','),
+    (sumDreal/n).toFixed(1).replace('.',','),
+    (sumE/n).toFixed(1).replace('.',','),
+    (sumF/n).toFixed(1).replace('.',','),
+    pctTot,
+    (sumH/n).toFixed(1).replace('.',','),
+    (sumII/n).toFixed(1).replace('.',','),
+    (sumJ/n).toFixed(1).replace('.',',')
+  ]);
+
+  const nDataRows = bodyRows.length - 2; // hors total/moy
+
+  doc.autoTable({
+    startY: y,
+    head: [tableHead],
+    body: bodyRows,
+    styles: {
+      fontSize: 7,
+      cellPadding: 1.8,
+      valign: 'middle',
+      halign: 'center',
+      font: 'helvetica',
+      lineColor: [180, 210, 240],
+      lineWidth: 0.3
+    },
+    headStyles: {
+      fillColor: bleuFonce,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 6.5,
+      halign: 'center',
+      cellPadding: 2
+    },
+    alternateRowStyles: { fillColor: [240, 246, 255] },
+    tableWidth: 'auto',
+    columnStyles: {
+      0: { fontStyle: 'bold', fillColor: [232, 240, 254], textColor: bleuFonce },
+      3: { textColor: bleu, fontStyle: 'bold' },
+      5: { textColor: bleu, fontStyle: 'bold' },
+      6: { textColor: vert,  fontStyle: 'bold' }
+    },
+    didParseCell: function(data) {
+      const totalRow = nDataRows;
+      const moyRow   = nDataRows + 1;
+      if (data.section === 'body') {
+        if (data.row.index === totalRow) {
+          data.cell.styles.fillColor = bleuFonce;
+          data.cell.styles.textColor = [255,255,255];
+          data.cell.styles.fontStyle = 'bold';
+          if (data.column.index === 6) data.cell.styles.textColor = [255,213,79];
+        }
+        if (data.row.index === moyRow) {
+          data.cell.styles.fillColor = [40, 53, 147];
+          data.cell.styles.textColor = [232, 240, 254];
+          data.cell.styles.fontStyle = 'bold';
+          if (data.column.index === 6) data.cell.styles.textColor = [255,213,79];
+        }
+        // % colonne : vert
+        if (data.column.index === 6 && data.row.index < totalRow) {
+          data.cell.styles.textColor = vert;
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [232, 245, 233];
+        }
+        // Colonne Mois style gauche
+        if (data.column.index === 0 && data.row.index < totalRow) {
+          data.cell.styles.fillColor = [232, 240, 254];
+          data.cell.styles.textColor = bleuFonce;
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    },
+    margin: { left: 6, right: 6 }
+  });
+
+  const tableBottom = doc.lastAutoTable.finalY;
+
+  // ── SIGNATURE ──
+  // Disposition officielle : TITRE — espace — ligne — NOM
+  // Tout doit tenir entre le bas du tableau et le pied de page (H - 12)
+  const footerY  = H - 12;          // haut du pied de page
+  const sigCenterX = W - 60;        // tiers droit
+
+  // On calcule depuis le bas pour garantir la visibilité
+  // Nom  : 7 mm au-dessus du pied de page
+  const nomY    = footerY - 7;
+  // Ligne : 8 mm au-dessus du nom
+  const ligneY  = nomY - 8;
+  // Espace de signature : 18 mm au-dessus de la ligne
+  // Titre : 5 mm au-dessus de l'espace
+  const titreY  = ligneY - 18;
+
+  // Vérifier qu'on ne chevauche pas le tableau
+  const sigStart = Math.max(titreY, tableBottom + 5);
+  const offset   = sigStart - titreY;
+
+  // 1. Titre LE / LA TITULAIRE
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...bleu);
+  doc.text('LE / LA TITULAIRE', sigCenterX, titreY + offset, { align: 'center' });
+
+  // 2. Grande zone vide pour la signature manuscrite (18 mm)
+
+  // 3. Ligne de signature
+  doc.setDrawColor(...bleu);
+  doc.setLineWidth(0.5);
+  doc.line(sigCenterX - 38, ligneY + offset, sigCenterX + 38, ligneY + offset);
+
+  // 4. Nom centré sous la ligne
+  if (data.enseignant) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30);
+    doc.text(data.enseignant, sigCenterX, nomY + offset, { align: 'center' });
+  }
+
+  // ── PIED DE PAGE ──
+  doc.setFillColor(...bleuFonce);
+  doc.rect(0, H - 10, W, 10, 'F');
+  doc.setFillColor(...bleuClair);
+  doc.rect(0, H - 10, W, 1.5, 'F');
+  doc.setTextColor(189, 226, 255);
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'normal');
+  const now = new Date();
+  const pied = 'GESTIONNAIRE D\'ÉVALUATION 3.0  ·  MAÎTRE MARIANO' +
+    (data.ecole ? '  ·  ' + data.ecole : '') +
+    (data.annee ? '  ·  ' + data.annee : '') +
+    '  ·  Imprimé le ' + now.toLocaleDateString('fr-FR') +
+    ' à ' + now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  doc.text(pied, W / 2, H - 3.5, { align: 'center' });
+
+  // ── SAUVEGARDE ──
+  const fn = 'Releves_Mensuels' +
+    (data.ecole ? '_' + data.ecole.replace(/\s+/g,'_').replace(/[^A-Za-z0-9_\-]/g,'') : '') +
+    (data.annee ? '_' + data.annee.replace(/[^A-Za-z0-9\-]/g,'_') : '') + '.pdf';
+  doc.save(fn);
+}
+
+// ── Initialisation de l'onglet 8 ──
+(function rmInit() {
+  rmBuildTable();
+  try {
+    const saved = localStorage.getItem(RM_KEY);
+    if (saved) rmLoadData(JSON.parse(saved));
+  } catch(e) {}
+
+  // Sauvegarde auto sur changement
+  document.addEventListener('input', function(ev) {
+    if (ev.target && (ev.target.classList.contains('rm-input') || ev.target.id.startsWith('rm-'))) {
+      try { localStorage.setItem(RM_KEY, JSON.stringify(rmGetData())); } catch(e){}
+    }
+  });
 })();
 
 </script>
