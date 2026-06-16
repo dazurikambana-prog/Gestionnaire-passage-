@@ -4860,7 +4860,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const cours = (document.getElementById('cours') && document.getElementById('cours').value) || 'Classe';
             const etape = (document.getElementById('etape') && document.getElementById('etape').value) || '';
             const filename = 'Modele_Notes_' + cours.replace(/\s+/g,'_') + (etape ? '_Etape' + etape : '') + '.xlsx';
-            XLSX.writeFile(wb, filename);
+
+            // Téléchargement compatible WebView (Median.co et autres) :
+            // on génère le binaire en base64 et on déclenche le téléchargement
+            // via une URL "data:" avec le bon type MIME, au lieu de XLSX.writeFile()
+            // (qui utilise un blob: URL souvent mal géré par les WebViews mobiles).
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+            const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            const dataUrl = 'data:' + mimeType + ';base64,' + wbout;
+
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         });
     }
 
