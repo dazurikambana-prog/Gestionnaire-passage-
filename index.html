@@ -1353,6 +1353,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <button class="btn btn-gold" onclick="exportBulletinsClasse()" title="Générer un bulletin pour chaque élève">🎓 Bulletins Classe</button>
     <button class="btn btn-gold" onclick="showBulletinModal()" title="Générer le bulletin d'un seul élève">📋 Bulletin Élève</button>
     <button type="button" id="btnTelechargerModeleExcel" class="btn btn-outline" title="Générer un modèle Excel avec les matières cochées">📤 Modèle Excel</button>
+    <button type="button" id="btnExporterExcel" class="btn btn-outline" title="Exporter le tableau de notes saisi en fichier Excel">📊 Exporter Excel</button>
     <input type="file" id="excelImportEleves" accept=".xlsx,.xls" style="display:none;">
     <button type="button" id="btnImportExcelEleves" class="btn btn-outline">📥 Importer Excel</button>
     <button class="btn btn-outline" onclick="clearAll()">🗑 Réinitialiser</button>
@@ -4875,6 +4876,75 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        });
+    }
+
+    // ── Export Excel du tableau de notes déjà saisi (fidèle à l'affichage) ──
+    const btnExporterExcel = document.getElementById('btnExporterExcel');
+    if (btnExporterExcel) {
+        btnExporterExcel.addEventListener('click', function () {
+            const thead = document.getElementById('main-thead');
+            const tbody = document.getElementById('table-body');
+            if (!thead || !tbody || !tbody.rows.length) {
+                alert('Aucun tableau à exporter. Générez d\'abord le tableau et saisissez les notes.');
+                return;
+            }
+
+            // 1) En-têtes : on lit le texte de chaque <th> (en ignorant les <small> de sous-titre)
+            const headerCells = thead.querySelectorAll('tr th');
+            const headers = Array.from(headerCells).map(th => {
+                const clone = th.cloneNode(true);
+                const small = clone.querySelector('small');
+                if (small) small.remove();
+                return clone.textContent.replace(/\s+/g, ' ').trim();
+            });
+
+            // 2) Lignes de données : on lit chaque cellule selon son type réel (input/select/texte)
+            const rows = [headers];
+            Array.from(tbody.rows).forEach(tr => {
+                const rowData = [];
+                Array.from(tr.cells).forEach(td => {
+                    const input = td.querySelector('input');
+                    const select = td.querySelector('select');
+                    let val;
+                    if (input) {
+                        val = input.value === '' ? '' : (input.type === 'number' ? parseFloat(input.value) : input.value);
+                    } else if (select) {
+                        val = select.value;
+                    } else {
+                        val = td.textContent.replace(/\s+/g, ' ').trim();
+                        if (val === '—') val = '';
+                    }
+                    rowData.push(val);
+                });
+                rows.push(rowData);
+            });
+
+            // 3) Construction du classeur Excel
+            const wb2 = XLSX.utils.book_new();
+            const ws2 = XLSX.utils.aoa_to_sheet(rows);
+            ws2['!cols'] = headers.map((h, idx) => {
+                if (idx === 1) return { wch: 28 }; // Nom et prénoms
+                if (idx === 0) return { wch: 5 };  // N°
+                return { wch: 12 };
+            });
+            XLSX.utils.book_append_sheet(wb2, ws2, 'Notes');
+
+            // 4) Téléchargement (même méthode compatible WebView que pour le modèle)
+            const cours2 = (document.getElementById('cours') && document.getElementById('cours').value) || 'Classe';
+            const etape2 = (document.getElementById('etape') && document.getElementById('etape').value) || '';
+            const filename2 = 'Notes_' + cours2.replace(/\s+/g,'_') + (etape2 ? '_Etape' + etape2 : '') + '.xlsx';
+
+            const wbout2 = XLSX.write(wb2, { bookType: 'xlsx', type: 'base64' });
+            const mimeType2 = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            const dataUrl2 = 'data:' + mimeType2 + ';base64,' + wbout2;
+
+            const a2 = document.createElement('a');
+            a2.href = dataUrl2;
+            a2.download = filename2;
+            document.body.appendChild(a2);
+            a2.click();
+            document.body.removeChild(a2);
         });
     }
 
