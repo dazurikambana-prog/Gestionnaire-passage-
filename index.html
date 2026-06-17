@@ -3735,11 +3735,50 @@ function saveLocal() {
   });
 
   const json = JSON.stringify(data);
-  const blob = new Blob([json], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `sauvegarde_evaluation_${data.cours || 'classe'}_etape${data.etape || ''}.json`;
-  a.click();
+  const filename = `sauvegarde_evaluation_${data.cours || 'classe'}_etape${data.etape || ''}.json`;
+
+  // Méthode 1 : téléchargement classique (navigateur desktop)
+  try {
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  } catch(e) {}
+
+  // Méthode 2 : data URI base64 (compatible Median.co / WebView mobile)
+  try {
+    const base64 = btoa(unescape(encodeURIComponent(json)));
+    const dataUri = 'data:application/json;base64,' + base64;
+    const a = document.createElement('a');
+    a.href = dataUri;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  } catch(e) {}
+
+  // Méthode 3 : window.location (dernier recours)
+  try {
+    const base64 = btoa(unescape(encodeURIComponent(json)));
+    window.location.href = 'data:application/json;base64,' + base64;
+    return;
+  } catch(e) {}
+
+  // Méthode 4 : fallback — afficher dans une popup pour copier manuellement
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write('<pre style="word-wrap:break-word;white-space:pre-wrap;">' + json + '</pre>');
+    win.document.title = filename;
+  } else {
+    alert('Impossible de télécharger automatiquement.\nCopiez manuellement :\n\n' + json);
+  }
 }
 
 function loadLocal() {
