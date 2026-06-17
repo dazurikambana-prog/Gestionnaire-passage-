@@ -1357,7 +1357,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <input type="file" id="excelImportEleves" accept=".xlsx,.xls" style="display:none;">
     <button type="button" id="btnImportExcelEleves" class="btn btn-outline">📥 Importer Excel</button>
     <button class="btn btn-outline" onclick="clearAll()">🗑 Réinitialiser</button>
-    <button class="btn btn-outline" onclick="saveLocal()">💾 Sauvegarder</button>
     <button class="btn btn-outline" onclick="loadLocal()">📂 Charger</button>
     <button class="btn btn-outline" onclick="saveLocalBrowser()" title="Sauvegarder dans le navigateur (localStorage)">🌐 Sauvegarder dans navigateur</button>
     <button class="btn btn-outline" onclick="loadLocalBrowser()" title="Charger la sauvegarde du navigateur">🔄 Charger du navigateur</button>
@@ -4059,7 +4058,7 @@ function renderEvalInputs() {
     html += `
       <div style="flex:1; min-width:200px;">
         <label style="font-weight:600; display:block; margin-bottom:5px; font-size:13px; ${color}">${label}</label>
-        <input type="file" id="file-eval${i}" accept=".json" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; background:white;">
+        <input type="file" id="file-eval${i}" accept=".xlsx,.xls" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; background:white;">
       </div>
     `;
   }
@@ -4069,15 +4068,78 @@ function renderEvalInputs() {
 // Initial render
 window.addEventListener('DOMContentLoaded', () => { renderEvalInputs(); });
 
-function parseJsonFile(file) {
+function parseExcelFile(file) {
   return new Promise((resolve) => {
     if (!file) { resolve(null); return; }
     const reader = new FileReader();
     reader.onload = e => {
-      try { resolve(JSON.parse(e.target.result)); }
-      catch(err) { resolve(null); }
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+        if (!rows || rows.length < 2) { resolve(null); return; }
+
+        // Ligne 1 = en-têtes
+        const headers = rows[0].map(h => String(h).trim().toLowerCase());
+
+        // Trouver les colonnes importantes
+        const idxNom  = headers.findIndex(h => h.includes('nom'));
+        const idxSexe = headers.findIndex(h => h.includes('sexe'));
+
+        if (idxNom === -1 || idxSexe === -1) {
+          alert('Fichier Excel invalide : colonnes "Nom" et "Sexe" introuvables.');
+          resolve(null); return;
+        }
+
+        // Les colonnes de notes = tout ce qui n'est pas N°, Nom, Sexe, Total, Moyenne, Seuil, Rang
+        const colsExclure = ['n°', 'no', 'num', 'nom', 'sexe', 'total', 'moyenne', 'moy', 'seuil', 'rang', 'décision', 'decision', 'matière(s)', 'obs'];
+        const notesIdx = headers.reduce((acc, h, i) => {
+          const hClean = h.replace(/[^a-z0-9]/g, '');
+          const exclure = colsExclure.some(ex => h.includes(ex.replace(/[^a-z0-9]/g, '')) || hClean === ex.replace(/[^a-z0-9]/g, ''));
+          if (!exclure) acc.push(i);
+          return acc;
+        }, []);
+
+        // Trouver le seuil depuis la ligne "seuil" ou utiliser 10 par défaut
+        // On cherche dans les données si une colonne "seuil" existe
+        const idxSeuil = headers.findIndex(h => h.includes('seuil'));
+
+        // Construire la liste des élèves
+        const eleves = [];
+        for (let r = 1; r < rows.length; r++) {
+          const row = rows[r];
+          const nom  = String(row[idxNom]  || '').trim();
+          const sexe = String(row[idxSexe] || '').trim();
+          if (!nom) continue; // ignorer lignes vides
+
+          const notes = notesIdx.map(i => {
+            const v = row[i];
+            if (v === '' || v === null || v === undefined) return '';
+            const n = parseFloat(v);
+            return isNaN(n) ? '' : n;
+          });
+
+          eleves.push({ nom, sexe, notes });
+        }
+
+        // Seuil global : on prend 10 par défaut (le fichier Excel ne le stocke pas directement)
+        // mais on peut le lire dans la colonne seuil si elle existe
+        let seuilGlobal = 10;
+        if (idxSeuil !== -1 && rows[1] && rows[1][idxSeuil] !== '') {
+          const sv = parseFloat(rows[1][idxSeuil]);
+          if (!isNaN(sv)) seuilGlobal = sv;
+        }
+
+        resolve({ eleves, seuil: seuilGlobal });
+      } catch(err) {
+        console.error('Erreur lecture Excel:', err);
+        alert('Erreur lors de la lecture du fichier Excel.');
+        resolve(null);
+      }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -4119,7 +4181,7 @@ async function calculerPassage() {
 
   let dataAll = [];
   for(let f of files) {
-      dataAll.push(await parseJsonFile(f));
+      dataAll.push(await parseExcelFile(f));
   }
 
   const baseData = dataAll[dataAll.length - 1]; // Use last eval as base roster
