@@ -1392,7 +1392,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <input type="text" id="cs"  oninput="updateHeader()">
           </div>
           <div class="field-group">
-            <label>EPP</label>
+            <label>ÉCOLE</label>
             <input type="text" id="epp"  oninput="updateHeader()">
           </div>
           <div class="field-group">
@@ -1415,12 +1415,46 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <input type="text" id="annee"  oninput="updateHeader()">
           </div>
           <div class="field-group">
-            <label>L'Administrateur</label>
+            <label>L'Administrateur / L'Administratrice</label>
             <input type="text" id="admin" oninput="updateHeader()">
           </div>
           <div class="field-group">
             <label>Le Directeur/La Directrice</label>
             <input type="text" id="directeur" oninput="updateHeader()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✍️ SIGNATURES DIGITALES -->
+    <div class="card">
+      <div class="card-header">✍️ Signatures Digitales</div>
+      <div class="card-body">
+        <p style="font-size:13px;color:#555;margin-bottom:16px;">Dessinez les signatures ci-dessous (doigt ou souris). Elles seront apposées automatiquement sur tous les bulletins et rapports des onglets 1 et 4.</p>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--vert);font-weight:700;margin-bottom:8px;">L'Administrateur / L'Administratrice</div>
+            <canvas id="sig-canvas-admin" width="320" height="100" style="border:2px solid #ccc;border-radius:8px;cursor:crosshair;display:block;background:#fff;touch-action:none;width:100%;max-width:320px;"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button onclick="sigEffacer('admin')" style="background:#ef5350;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;">🗑️ Effacer</button>
+              <button onclick="sigEnregistrer('admin')" style="background:#43a047;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;">💾 Enregistrer</button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#777;">Aperçu :</div>
+            <div id="sig-apercu-admin" style="border:1px dashed #ccc;border-radius:6px;padding:4px;min-height:40px;display:flex;align-items:center;justify-content:center;background:#fafafa;">
+              <span style="color:#bbb;font-style:italic;font-size:12px;">Aucune signature enregistrée</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:240px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--vert);font-weight:700;margin-bottom:8px;">Le Directeur / La Directrice</div>
+            <canvas id="sig-canvas-directeur" width="320" height="100" style="border:2px solid #ccc;border-radius:8px;cursor:crosshair;display:block;background:#fff;touch-action:none;width:100%;max-width:320px;"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button onclick="sigEffacer('directeur')" style="background:#ef5350;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;">🗑️ Effacer</button>
+              <button onclick="sigEnregistrer('directeur')" style="background:#43a047;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;">💾 Enregistrer</button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#777;">Aperçu :</div>
+            <div id="sig-apercu-directeur" style="border:1px dashed #ccc;border-radius:6px;padding:4px;min-height:40px;display:flex;align-items:center;justify-content:center;background:#fafafa;">
+              <span style="color:#bbb;font-style:italic;font-size:12px;">Aucune signature enregistrée</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1643,7 +1677,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <!-- Signatures -->
         <div class="signatures">
           <div class="sig-block">
-            <div class="sig-role">L'Administrateur</div>
+            <div class="sig-role">L'Administrateur / L'Administratrice</div>
             <div class="sig-line"></div>
             <div class="sig-name" id="sig-admin">—</div>
           </div>
@@ -1736,7 +1770,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
           <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:20px; padding:16px; background:#f9fbfc; border-radius:8px; border:1px solid #e1e8ed;">
             <div style="flex:1; min-width:200px;">
-              <label style="font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--vert); font-family:'Courier New',monospace; font-weight:600; display:block; margin-bottom:6px;">L'Administrateur</label>
+              <label style="font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--vert); font-family:'Courier New',monospace; font-weight:600; display:block; margin-bottom:6px;">L'Administrateur / L'Administratrice</label>
               <input type="text" id="bilan-admin-input" oninput="document.getElementById('bilan-sig-admin').textContent = this.value || '—'" style="width:100%; padding:8px 12px; border:1.5px solid var(--gris-mid); border-radius:6px; font-family:Georgia,serif; font-size:14px; outline:none; box-sizing:border-box;">
             </div>
             <div style="flex:1; min-width:200px;">
@@ -1746,7 +1780,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           </div>
           <div class="signatures" style="margin-top:20px;">
             <div class="sig-block">
-              <div class="sig-role">L'Administrateur</div>
+              <div class="sig-role">L'Administrateur / L'Administratrice</div>
               <div class="sig-line"></div>
               <div class="sig-name" id="bilan-sig-admin">—</div>
             </div>
@@ -1808,8 +1842,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <button onclick="cepSauvegarder()" style="background:#2196F3;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">💾 Sauvegarder</button>
         <button onclick="cepReinitialiser()" style="background:#f44336;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;" title="Effacer toutes les données CEP">🗑️ Réinitialiser</button>
         <button onclick="cepCharger()" style="background:#ff9800;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">🔄 Charger</button>
-        <button onclick="cepExporterJSON()" style="background:#9c27b0;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📤 Exporter JSON</button>
-        <label style="background:#455a64;color:#fff;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📂 Importer JSON<input type="file" id="cep-import-json" accept=".json" style="display:none" onchange="cepImporterJSON(event)"></label>
+        <button onclick="cepExporterExcel()" style="background:#9c27b0;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📤 Exporter Excel</button>
+        <label style="background:#455a64;color:#fff;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">📂 Importer Excel<input type="file" id="cep-import-excel-full" accept=".xlsx,.xls" style="display:none" onchange="cepImporterExcel(event)"></label>
         <button onclick="cepTelechargePDF1(this)" style="background:#e91e63;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">⬇ Télécharger en PDF</button>
         <button onclick="cepClasserParMerite()" style="background:#388e3c;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;" title="Trie les candidats du 1er au dernier selon leur rang">🏆 Classer par mérite</button>
         <span id="cep-nb-badge" style="background:var(--or);color:#333;padding:6px 12px;border-radius:20px;font-weight:bold;font-size:13px;margin-left:auto;">0 candidat(s)</span>
@@ -2459,6 +2493,89 @@ function classerParMerite() {
 
   recalcAll();
 }
+// ══════════════════════════════════════════════════
+// SIGNATURES DIGITALES — canvas dessin + localStorage
+// ══════════════════════════════════════════════════
+const sigState = { admin: { drawing: false, lastX: 0, lastY: 0 }, directeur: { drawing: false, lastX: 0, lastY: 0 } };
+
+function sigGetPos(canvas, e) {
+  const r = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / r.width;
+  const scaleY = canvas.height / r.height;
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+}
+
+function sigInitCanvas(role) {
+  const canvas = document.getElementById('sig-canvas-' + role);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a237e';
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const start = (e) => { e.preventDefault(); const p = sigGetPos(canvas, e); sigState[role].drawing = true; sigState[role].lastX = p.x; sigState[role].lastY = p.y; ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+  const draw  = (e) => { e.preventDefault(); if (!sigState[role].drawing) return; const p = sigGetPos(canvas, e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigState[role].lastX = p.x; sigState[role].lastY = p.y; };
+  const stop  = (e) => { e.preventDefault(); sigState[role].drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stop);
+  canvas.addEventListener('mouseleave', stop);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
+  canvas.addEventListener('touchend', stop, { passive: false });
+}
+
+function sigEffacer(role) {
+  const canvas = document.getElementById('sig-canvas-' + role);
+  if (!canvas) return;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function sigEnregistrer(role) {
+  const canvas = document.getElementById('sig-canvas-' + role);
+  if (!canvas) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  localStorage.setItem('ge3_sig_' + role, dataUrl);
+  sigAfficherApercu(role, dataUrl);
+  alert('Signature ' + (role === 'admin' ? "de l'Administrateur" : 'du Directeur') + ' enregistrée !');
+}
+
+function sigAfficherApercu(role, dataUrl) {
+  const div = document.getElementById('sig-apercu-' + role);
+  if (!div) return;
+  if (dataUrl) {
+    div.innerHTML = '<img src="' + dataUrl + '" style="max-width:100%;max-height:60px;object-fit:contain;">';
+  } else {
+    div.innerHTML = '<span style="color:#bbb;font-style:italic;font-size:12px;">Aucune signature enregistrée</span>';
+  }
+}
+
+function sigChargerDepuisStorage() {
+  ['admin', 'directeur'].forEach(role => {
+    const saved = localStorage.getItem('ge3_sig_' + role);
+    if (saved) sigAfficherApercu(role, saved);
+  });
+}
+
+function sigGetDataUrl(role) {
+  return localStorage.getItem('ge3_sig_' + role) || null;
+}
+
+function sigInjecterPDF(doc, roleAdmin, roleDirecteur, xAdmin, xDirecteur, y, w, h) {
+  // w = largeur image, h = hauteur image, y = position Y de la zone signature
+  const imgAdmin = sigGetDataUrl('admin');
+  const imgDirecteur = sigGetDataUrl('directeur');
+  if (imgAdmin) {
+    try { doc.addImage(imgAdmin, 'PNG', xAdmin - w/2, y - h, w, h); } catch(e) {}
+  }
+  if (imgDirecteur) {
+    try { doc.addImage(imgDirecteur, 'PNG', xDirecteur - w/2, y - h, w, h); } catch(e) {}
+  }
+}
+
 function updateHeader() {
   const etape = document.getElementById('etape').value || '—';
   document.getElementById('badge-etape').textContent = etape;
@@ -2986,7 +3103,7 @@ async function exportPDF() {
 
   doc.text(`DDEMP : ${ddemp}`, 10, 30);
   doc.text(`CS : ${cs}`, 10, 36);
-  doc.text(`EPP : ${epp}`, 10, 42);
+  doc.text(`ÉCOLE : ${epp}`, 10, 42);
   doc.text(`Cours : ${cours}    |    Étape : ${etape}    |    Année : ${annee}`, W / 2, 30, { align: 'center' });
 
   doc.setFillColor(...vert);
@@ -3269,16 +3386,25 @@ async function exportPDF() {
 
   // Signatures
   y = Math.max(y + 15, 150);
+  // 1. Titres
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...vert);
+  doc.text('L\'Administrateur / L\'Administratrice', 45, y, {align:'center'});
+  doc.text('Le Directeur / La Directrice', W-45, y, {align:'center'});
+  y += 3;
+  // 2. Images signatures digitales
+  sigInjecterPDF(doc, 'admin', 'directeur', 45, W-45, y + 18, 66, 18);
+  y += 18;
+  // 3. Trait de signature
   doc.setDrawColor(...vert);
   doc.line(10, y, 80, y);
   doc.line(W-80, y, W-10, y);
   y += 5;
-  doc.setFont('helvetica','bold');
-  doc.text('L\'Administrateur / L\'Administratrice', 45, y, {align:'center'});
-  doc.text('Le Directeur / La Directrice', W-45, y, {align:'center'});
-  y += 5;
+  // 4. Nom/qualité
   doc.setFont('helvetica','normal');
   doc.setTextColor(100,100,100);
+  doc.setFontSize(9);
   doc.text(document.getElementById('admin').value || '-', 45, y, {align:'center'});
   doc.text(document.getElementById('directeur').value || '-', W-45, y, {align:'center'});
 
@@ -3472,7 +3598,7 @@ function generateBulletinsPdf(rows, indices, single) {
     const institutionTxt = [
       ddemp ? 'DDEMP: ' + cleanForPdf(ddemp) : '',
       cs ? 'CS: ' + cleanForPdf(cs) : '',
-      epp ? 'EPP: ' + cleanForPdf(epp) : '',
+      epp ? 'ÉCOLE: ' + cleanForPdf(epp) : '',
       cours ? 'Cours: ' + cleanForPdf(cours) : ''
     ].filter(Boolean).join('   |   ');
     doc.text(institutionTxt, W/2, 23, { align: 'center' });
@@ -3666,7 +3792,8 @@ function generateBulletinsPdf(rows, indices, single) {
     doc.setFont('helvetica', 'bold');
     doc.text("L'Administrateur / L'Administratrice", 55, sigY, { align: 'center' });
     doc.text("Le Directeur / La Directrice", 155, sigY, { align: 'center' });
-    // Espace vide pour signature manuscrite (20 mm)
+    // Images signatures digitales
+    sigInjecterPDF(doc, 'admin', 'directeur', 55, 155, sigY + 20, 60, 18);
     // Trait de signature
     doc.setDrawColor(...vert);
     doc.setLineWidth(0.6);
@@ -4615,13 +4742,24 @@ function exportBilanPDF() {
   doc.setFont('helvetica', 'bold');
   const adminBilan = document.getElementById('bilan-admin-input').value || document.getElementById('admin').value || '';
   const directeurBilan = document.getElementById('bilan-directeur-input').value || document.getElementById('directeur').value || '';
+  // 1. Titres
+  doc.setTextColor(...vert);
   doc.text('L\'Administrateur / L\'Administratrice', 45, finalY, {align:'center'});
   doc.text('Le Directeur / La Directrice', W-45, finalY, {align:'center'});
-  
+  finalY += 3;
+  // 2. Images signatures digitales
+  sigInjecterPDF(doc, 'admin', 'directeur', 45, W-45, finalY + 18, 66, 18);
+  finalY += 18;
+  // 3. Trait de signature
+  doc.setDrawColor(...vert);
+  doc.line(10, finalY, 80, finalY);
+  doc.line(W-80, finalY, W-10, finalY);
+  finalY += 5;
+  // 4. Nom/qualité
   doc.setFont('helvetica','normal');
   doc.setTextColor(100,100,100);
-  doc.text(adminBilan || '-', 45, finalY + 5, {align:'center'});
-  doc.text(directeurBilan || '-', W-45, finalY + 5, {align:'center'});
+  doc.text(adminBilan || '-', 45, finalY, {align:'center'});
+  doc.text(directeurBilan || '-', W-45, finalY, {align:'center'});
 
   const pages = doc.internal.getNumberOfPages();
   const nowB = new Date();
@@ -4707,7 +4845,7 @@ function exportPassageBulletinsPdf() {
     doc.text('Critère de passage : OUI à au moins ' + reqOui + ' évaluation(s) sur ' + nbEvals, W / 2, 19, { align: 'center' });
     doc.setFontSize(7.5);
     doc.setTextColor(180, 220, 200);
-    const instLine = [epp ? 'EPP: ' + cleanForPdf(epp) : '', cours ? 'Cours: ' + cleanForPdf(cours) : '', annee ? 'Année: ' + cleanForPdf(annee) : ''].filter(Boolean).join('   |   ');
+    const instLine = [epp ? 'ÉCOLE: ' + cleanForPdf(epp) : '', cours ? 'Cours: ' + cleanForPdf(cours) : '', annee ? 'Année: ' + cleanForPdf(annee) : ''].filter(Boolean).join('   |   ');
     doc.text(instLine, W / 2, 26, { align: 'center' });
 
     // ── FICHE ÉLÈVE ──
@@ -4865,8 +5003,9 @@ function exportPassageBulletinsPdf() {
     doc.setFont('helvetica', 'bold');
     doc.text("L'Administrateur / L'Administratrice", 55, sigY, { align: 'center' });
     doc.text('Le Directeur / La Directrice', 155, sigY, { align: 'center' });
-    // Espace vide pour signature manuscrite (20 mm)
-    // Nom en bas
+    // Images signatures digitales
+    sigInjecterPDF(doc, 'admin', 'directeur', 55, 155, sigY + 20, 60, 18);
+    // Trait de signature
     doc.setDrawColor(...vert);
     doc.setLineWidth(0.6);
     doc.line(22, sigY + 20, 88, sigY + 20);
@@ -4911,7 +5050,7 @@ function downloadSinglePassageBulletin(idx) {
   window.passageDataGlobal = saved;
 }
 </script>
-<script>window.onload = function() { updateHeader(); renderEvalInputs(); };</script>
+<script>window.onload = function() { updateHeader(); renderEvalInputs(); sigInitCanvas('admin'); sigInitCanvas('directeur'); sigChargerDepuisStorage(); };</script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -5999,56 +6138,149 @@ function cepAutoRestore() {
 }
 document.addEventListener('DOMContentLoaded', cepAutoRestore);
 
-function cepExporterJSON() {
-  const data = {
-    meta: {
-      centre: document.getElementById('cep-centre').value,
-      chef: document.getElementById('cep-chef').value,
-      commune: document.getElementById('cep-commune').value,
-      depart: document.getElementById('cep-depart').value,
-      annee: document.getElementById('cep-annee').value,
-      ddemp: document.getElementById('cep-ddemp').value,
-      cs: document.getElementById('cep-cs').value,
-      num: document.getElementById('cep-num').value
-    },
-    students: cepStudents, notes: cepNotes
+function cepExporterExcel() {
+  if (!cepStudents || cepStudents.length === 0) {
+    alert('Aucun candidat à exporter.'); return;
+  }
+  // Libellés colonnes
+  const matLabels = {
+    CE:'CE', EE:'EE', EST:'EST', ES:'ES', MATHS:'MATHS',
+    DICTEE:'DICTEE', EAVIVANT:'EA/VIVANT', COUTDESSIN:'COUTURE/DESSIN', EPS:'EPS'
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  // Ligne méta (1 ligne d'en-tête du centre)
+  const meta = [
+    ['CENTRE', document.getElementById('cep-centre').value || ''],
+    ['CHEF', document.getElementById('cep-chef').value || ''],
+    ['COMMUNE', document.getElementById('cep-commune').value || ''],
+    ['DEPARTEMENT', document.getElementById('cep-depart').value || ''],
+    ['ANNEE', document.getElementById('cep-annee').value || ''],
+    ['DDEMP', document.getElementById('cep-ddemp').value || ''],
+    ['CS', document.getElementById('cep-cs').value || ''],
+    ['NUM', document.getElementById('cep-num').value || '']
+  ];
+  // En-tête du tableau
+  const header = ['N°', 'NOM', 'SEXE', 'ECOLE', 'A_COMPOSE',
+    'CE', 'EE', 'EST', 'ES', 'MATHS', 'DICTEE', 'EA_VIVANT', 'COUTURE_DESSIN', 'EPS',
+    'SEUIL_ATTEINT'];
+  // Lignes candidats
+  const rows = cepStudents.map(function(s) {
+    const n = cepNotes[s.id] || {};
+    return [
+      s.id, s.nom, s.sexe, s.ecole,
+      n.aCompose ? 'OUI' : 'NON',
+      n.CE !== null && n.CE !== undefined ? n.CE : '',
+      n.EE !== null && n.EE !== undefined ? n.EE : '',
+      n.EST !== null && n.EST !== undefined ? n.EST : '',
+      n.ES !== null && n.ES !== undefined ? n.ES : '',
+      n.MATHS !== null && n.MATHS !== undefined ? n.MATHS : '',
+      n.DICTEE !== null && n.DICTEE !== undefined ? n.DICTEE : '',
+      n.EAVIVANT !== null && n.EAVIVANT !== undefined ? n.EAVIVANT : '',
+      n.COUTDESSIN !== null && n.COUTDESSIN !== undefined ? n.COUTDESSIN : '',
+      n.EPS !== null && n.EPS !== undefined ? n.EPS : '',
+      n.seuilAtteint === true ? 'OUI' : n.seuilAtteint === false ? 'NON' : ''
+    ];
+  });
+
+  if (typeof XLSX === 'undefined') { alert('Bibliothèque Excel non disponible.'); return; }
+  const wb = XLSX.utils.book_new();
+
+  // Feuille META
+  const wsMeta = XLSX.utils.aoa_to_sheet(meta);
+  XLSX.utils.book_append_sheet(wb, wsMeta, 'META');
+
+  // Feuille CANDIDATS
+  const wsData = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  XLSX.utils.book_append_sheet(wb, wsData, 'CANDIDATS');
+
+  const centre = (document.getElementById('cep-centre').value || 'centre').replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'');
+  const filename = 'CEP_Blanc_' + centre + '.xlsx';
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+  const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'cep_blanc_' + (data.meta.centre || 'centre').replace(/\s+/g,'_') + '.json';
+  a.href = 'data:' + mimeType + ';base64,' + wbout;
+  a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 
-function cepImporterJSON(event) {
+function cepImporterExcel(event) {
   const file = event.target.files[0];
   if (!file) return;
+  if (typeof XLSX === 'undefined') { alert('Bibliothèque Excel non disponible.'); return; }
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
-      if (data.meta) {
-        document.getElementById('cep-centre').value = data.meta.centre || '';
-        document.getElementById('cep-chef').value = data.meta.chef || '';
-        document.getElementById('cep-commune').value = data.meta.commune || '';
-        document.getElementById('cep-depart').value = data.meta.depart || '';
-        document.getElementById('cep-annee').value = data.meta.annee || '';
-        document.getElementById('cep-ddemp').value = data.meta.ddemp || '';
-        document.getElementById('cep-cs').value = data.meta.cs || '';
-        document.getElementById('cep-num').value = data.meta.num || '';
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+
+      // Lire feuille META
+      const wsMeta = wb.Sheets['META'];
+      if (wsMeta) {
+        const metaRows = XLSX.utils.sheet_to_json(wsMeta, { header: 1 });
+        const metaMap = {};
+        metaRows.forEach(function(r) { if (r[0]) metaMap[r[0]] = r[1] || ''; });
+        if (metaMap['CENTRE'] !== undefined) document.getElementById('cep-centre').value = metaMap['CENTRE'];
+        if (metaMap['CHEF'] !== undefined) document.getElementById('cep-chef').value = metaMap['CHEF'];
+        if (metaMap['COMMUNE'] !== undefined) document.getElementById('cep-commune').value = metaMap['COMMUNE'];
+        if (metaMap['DEPARTEMENT'] !== undefined) document.getElementById('cep-depart').value = metaMap['DEPARTEMENT'];
+        if (metaMap['ANNEE'] !== undefined) document.getElementById('cep-annee').value = metaMap['ANNEE'];
+        if (metaMap['DDEMP'] !== undefined) document.getElementById('cep-ddemp').value = metaMap['DDEMP'];
+        if (metaMap['CS'] !== undefined) document.getElementById('cep-cs').value = metaMap['CS'];
+        if (metaMap['NUM'] !== undefined) document.getElementById('cep-num').value = metaMap['NUM'];
       }
-      cepStudents = data.students || [];
-      cepNotes = data.notes || {};
+
+      // Lire feuille CANDIDATS
+      const wsData = wb.Sheets['CANDIDATS'];
+      if (!wsData) throw new Error('Feuille CANDIDATS introuvable.');
+      const rows = XLSX.utils.sheet_to_json(wsData, { header: 1 });
+      if (rows.length < 2) throw new Error('Aucune donnée dans la feuille CANDIDATS.');
+
+      // Ignorer la ligne d'en-tête (index 0)
+      const newStudents = [];
+      const newNotes = {};
+      rows.slice(1).forEach(function(r) {
+        if (!r[0] && !r[1]) return; // ligne vide
+        const id = String(r[0] || '').trim();
+        const nom = String(r[1] || '').trim();
+        if (!id || !nom) return;
+        const sexe = String(r[2] || 'M').trim().toUpperCase() === 'F' ? 'F' : 'M';
+        const ecole = String(r[3] || '').trim();
+        const aCompose = String(r[4] || '').trim().toUpperCase() === 'OUI';
+        const toNote = function(v) {
+          if (v === null || v === undefined || v === '') return null;
+          const n = parseFloat(v);
+          return isNaN(n) ? null : n;
+        };
+        newStudents.push({ id, nom, sexe, ecole });
+        newNotes[id] = {
+          aCompose: aCompose,
+          CE:         toNote(r[5]),
+          EE:         toNote(r[6]),
+          EST:        toNote(r[7]),
+          ES:         toNote(r[8]),
+          MATHS:      toNote(r[9]),
+          DICTEE:     toNote(r[10]),
+          EAVIVANT:   toNote(r[11]),
+          COUTDESSIN: toNote(r[12]),
+          EPS:        toNote(r[13]),
+          seuilAtteint: String(r[14] || '').trim().toUpperCase() === 'OUI' ? true
+                      : String(r[14] || '').trim().toUpperCase() === 'NON' ? false : null
+        };
+      });
+      if (newStudents.length === 0) throw new Error('Aucun candidat valide trouvé.');
+
+      cepStudents = newStudents;
+      cepNotes = newNotes;
       cepRenderTable();
       cepUpdateSyntheses();
       cepSyncSignatures();
-      alert('📥 Fichier JSON CEP importé avec succès !');
+      alert('✅ Fichier Excel CEP importé avec succès ! (' + newStudents.length + ' candidat(s))');
     } catch(err) {
-      alert('⚠️ Erreur lors de la lecture du fichier JSON.');
+      alert('⚠️ Erreur lors de la lecture du fichier Excel :\n' + err.message);
     }
     event.target.value = '';
   };
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
 }
 function cepImprimerAnalyse() { cepTelechargePDF2(null); }
 
@@ -6422,6 +6654,10 @@ async function cepTelechargePDF1(btn) {
     if (sigDateStr) { doc.text(sigDateStr, W-60, sigY, {align:'center'}); sigY += 7; }
     doc.setFont('helvetica','bold');
     doc.text('Le Chef Centre', W-60, sigY, {align:'center'});
+    // Image signature digitale du chef (depuis onglet 7)
+    if (typeof releveSigDataUrl !== 'undefined' && releveSigDataUrl) {
+      try { doc.addImage(releveSigDataUrl, 'PNG', W-88, sigY+2, 56, 16); } catch(e){}
+    }
     doc.setDrawColor(...dark); doc.setLineWidth(0.4);
     doc.line(W-95, sigY+18, W-25, sigY+18);
     if (chef && chef!=='—') doc.text(chef, W-60, sigY+24, {align:'center'});
@@ -6716,6 +6952,10 @@ async function cepTelechargePDF2(btn) {
     if (sigDateStr2) { doc.text(sigDateStr2,W-60,y,{align:'center'}); y+=7; }
     doc.setFont('helvetica','bold');
     doc.text('Le Chef Centre',W-60,y,{align:'center'});
+    // Image signature digitale du chef (depuis onglet 7)
+    if (typeof releveSigDataUrl !== 'undefined' && releveSigDataUrl) {
+      try { doc.addImage(releveSigDataUrl, 'PNG', W-88, y+2, 56, 16); } catch(e){}
+    }
     doc.setDrawColor(...dark); doc.setLineWidth(0.4);
     doc.line(W-95,y+18,W-25,y+18);
     if(chef&&chef!=='—') doc.text(chef,W-60,y+24,{align:'center'});
