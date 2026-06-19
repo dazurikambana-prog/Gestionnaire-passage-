@@ -3506,6 +3506,7 @@ function generateObservationEleve(noteRows, moy, isAdmis, sexe, seuilVal) {
 }
 
 function justifyText(doc, lines, x, y, maxWidth, lineH) {
+  const minSpace = doc.getTextWidth(' ') * 0.6;
   lines.forEach((line, li) => {
     if (li === lines.length - 1 || line.trim() === '') {
       doc.text(line, x, y + li * lineH);
@@ -3514,7 +3515,8 @@ function justifyText(doc, lines, x, y, maxWidth, lineH) {
     const words = line.split(' ');
     if (words.length <= 1) { doc.text(line, x, y + li * lineH); return; }
     const usedW = doc.getTextWidth(words.join(''));
-    const spaceW = (maxWidth - usedW) / (words.length - 1);
+    let spaceW = (maxWidth - usedW) / (words.length - 1);
+    if (spaceW < minSpace) { doc.text(line, x, y + li * lineH); return; }
     let cx = x;
     words.forEach(w => {
       doc.text(w, cx, y + li * lineH);
@@ -3765,6 +3767,8 @@ function generateBulletinsPdf(rows, indices, single) {
     // ── OBSERVATION DE L'ENSEIGNANT(E) ──
     const obsText = generateObservationEleve(noteRows, moy, isAdmis, sexe, seuilVal);
     const obsJustifyW = W - 32;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
     const obsLines = doc.splitTextToSize(cleanForPdf(obsText), obsJustifyW);
     const obsH = Math.max(obsLines.length * 4.2 + 11, 17);
     doc.setFillColor(250, 248, 235);
@@ -4208,58 +4212,47 @@ function parseExcelFile(file) {
 
         if (!rows || rows.length < 2) { resolve(null); return; }
 
-        // Ligne 1 = en-têtes
-        const headers = rows[0].map(h => String(h).trim().toLowerCase());
+        // Ligne 0 = en-têtes, normaliser (retirer accents)
+        const headers = rows[0].map(h => String(h).trim().toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
-        // Trouver les colonnes importantes
-        const idxNom  = headers.findIndex(h => h.includes('nom'));
-        const idxSexe = headers.findIndex(h => h.includes('sexe'));
+        // Trouver uniquement les colonnes utiles : Nom, Sexe, Moyenne, Seuil
+        const idxNom     = headers.findIndex(h => h.includes('nom'));
+        const idxSexe    = headers.findIndex(h => h.includes('sexe'));
+        const idxMoyenne = headers.findIndex(h => h.includes('moy'));
+        const idxSeuil   = headers.findIndex(h => h.includes('seuil'));
 
         if (idxNom === -1 || idxSexe === -1) {
           alert('Fichier Excel invalide : colonnes "Nom" et "Sexe" introuvables.');
           resolve(null); return;
         }
+        if (idxMoyenne === -1) {
+          alert('Fichier Excel invalide : colonne "Moyenne" introuvable.\nVérifiez que le fichier vient bien de l\'onglet 1.');
+          resolve(null); return;
+        }
+        if (idxSeuil === -1) {
+          alert('Fichier Excel invalide : colonne "Seuil" (OUI/NON) introuvable.\nVérifiez que le fichier vient bien de l\'onglet 1.');
+          resolve(null); return;
+        }
 
-        // Les colonnes de notes = tout ce qui n'est pas N°, Nom, Sexe, Total, Moyenne, Seuil, Rang
-        const colsExclure = ['n°', 'no', 'num', 'nom', 'sexe', 'total', 'moyenne', 'moy', 'seuil', 'rang', 'décision', 'decision', 'matière(s)', 'obs'];
-        const notesIdx = headers.reduce((acc, h, i) => {
-          const hClean = h.replace(/[^a-z0-9]/g, '');
-          const exclure = colsExclure.some(ex => h.includes(ex.replace(/[^a-z0-9]/g, '')) || hClean === ex.replace(/[^a-z0-9]/g, ''));
-          if (!exclure) acc.push(i);
-          return acc;
-        }, []);
-
-        // Trouver le seuil depuis la ligne "seuil" ou utiliser 10 par défaut
-        // On cherche dans les données si une colonne "seuil" existe
-        const idxSeuil = headers.findIndex(h => h.includes('seuil'));
-
-        // Construire la liste des élèves
+        // Construire la liste des élèves avec Nom, Sexe, Moyenne, OUI/NON
         const eleves = [];
         for (let r = 1; r < rows.length; r++) {
           const row = rows[r];
           const nom  = String(row[idxNom]  || '').trim();
-          const sexe = String(row[idxSexe] || '').trim();
-          if (!nom) continue; // ignorer lignes vides
+          const sexe = String(row[idxSexe] || '').trim().toUpperCase();
+          if (!nom) continue;
 
-          const notes = notesIdx.map(i => {
-            const v = row[i];
-            if (v === '' || v === null || v === undefined) return '';
-            const n = parseFloat(v);
-            return isNaN(n) ? '' : n;
-          });
+          const moyVal = parseFloat(row[idxMoyenne]);
+          const moy    = isNaN(moyVal) ? null : moyVal;
 
-          eleves.push({ nom, sexe, notes });
+          const seuilRaw = String(row[idxSeuil] || '').trim().toUpperCase();
+          const seuil    = seuilRaw === 'OUI' ? 'OUI' : seuilRaw === 'NON' ? 'NON' : null;
+
+          eleves.push({ nom, sexe, moy, seuil });
         }
 
-        // Seuil global : on prend 10 par défaut (le fichier Excel ne le stocke pas directement)
-        // mais on peut le lire dans la colonne seuil si elle existe
-        let seuilGlobal = 10;
-        if (idxSeuil !== -1 && rows[1] && rows[1][idxSeuil] !== '') {
-          const sv = parseFloat(rows[1][idxSeuil]);
-          if (!isNaN(sv)) seuilGlobal = sv;
-        }
-
-        resolve({ eleves, seuil: seuilGlobal });
+        resolve({ eleves });
       } catch(err) {
         console.error('Erreur lecture Excel:', err);
         alert('Erreur lors de la lecture du fichier Excel.');
@@ -4270,28 +4263,6 @@ function parseExcelFile(file) {
   });
 }
 
-function getStudentStats(eleve, seuilGlobal) {
-  if (!eleve || !eleve.notes) return { moy: 0, seuil: '—' };
-  let validNotesCount = 0;
-  let matSup = 0;
-  let total = 0;
-  const nbMat = eleve.notes.length || MATIERES.length || 9;
-  eleve.notes.forEach(n => {
-    if (n !== null && n !== '') {
-      let val = parseFloat(n);
-      validNotesCount++;
-      total += val;
-      if (val >= seuilGlobal) matSup++;
-    }
-  });
-  if (validNotesCount === 0) return { moy: 0, seuil: '—' };
-  const seuilPassage = getSeuilMat(nbMat);
-  return {
-    moy: (total / nbMat),
-    seuil: matSup >= seuilPassage ? 'OUI' : 'NON'
-  };
-}
-
 window.passageDataGlobal = []; // Store globally for PDF export
 window.nbEvalsGlobal = 3;
 
@@ -4299,38 +4270,39 @@ async function calculerPassage() {
   const nbEvals = parseInt(document.getElementById('nb-evals-select').value);
   window.nbEvalsGlobal = nbEvals;
   let files = [];
-  
-  for(let i=1; i<=nbEvals; i++) {
+
+  for (let i = 1; i <= nbEvals; i++) {
     let f = document.getElementById(`file-eval${i}`).files[0];
-    if(!f) { alert(`Veuillez charger le fichier pour l'Évaluation ${i}.`); return; }
+    if (!f) { alert(`Veuillez charger le fichier pour l'Évaluation ${i}.`); return; }
     files.push(f);
   }
 
   let dataAll = [];
-  for(let f of files) {
-      dataAll.push(await parseExcelFile(f));
+  for (let f of files) {
+    dataAll.push(await parseExcelFile(f));
   }
 
-  const baseData = dataAll[dataAll.length - 1]; // Use last eval as base roster
+  const baseData = dataAll[dataAll.length - 1];
   if (!baseData || !baseData.eleves) {
-    alert("Les fichiers chargés sont invalides ou vides.");
+    alert('Les fichiers chargés sont invalides ou vides.');
     return;
   }
 
-  // Construct table header dynamically
+  // ── En-tête du tableau ──
   let theadHtml = `<tr>
-    <th style="width:40px; text-align:center;">N°</th>
+    <th style="width:40px;text-align:center;">N°</th>
     <th style="text-align:left;">Nom et prénoms</th>
     <th style="text-align:center;">Sexe</th>`;
-  for(let i=1; i<=nbEvals; i++) {
-      theadHtml += `<th style="text-align:center;" title="Moyenne (OUI/NON)">Éval ${i}</th>`;
+  for (let i = 1; i <= nbEvals; i++) {
+    theadHtml += `<th style="text-align:center;" title="Moy. (OUI/NON)">Éval ${i}</th>`;
   }
-  theadHtml += `<th style="text-align:center; color:var(--or);" title="Moyenne des évaluations antérieures">Mo (Moy. ant.)</th>
-    <th style="text-align:center; background:var(--vert); color:white;">Moy. Annuelle</th>
+  theadHtml += `
+    <th style="text-align:center;color:var(--or);">Mo</th>
+    <th style="text-align:center;background:var(--vert);color:white;">Moy. Annuelle</th>
     <th style="text-align:center;">OUI</th>
     <th style="text-align:center;">DÉCISION</th>
     <th style="text-align:center;">Rang</th>
-    <th style="text-align:center; background:#f0f4f2;">PDF</th>
+    <th style="text-align:center;background:#f0f4f2;">PDF</th>
   </tr>`;
   document.getElementById('thead-passage').innerHTML = theadHtml;
 
@@ -4338,230 +4310,177 @@ async function calculerPassage() {
   tbody.innerHTML = '';
   window.passageDataGlobal = [];
 
-  const getStudent = (data, nom, sexe) => {
+  // ── Règle des 2/3 ──
+  const seuilOui = Math.ceil(nbEvals * 2 / 3);
+
+  // ── Trouver un élève dans un fichier par nom ──
+  const getEleve = (data, nom) => {
     if (!data || !data.eleves) return null;
-    return data.eleves.find(e => e.nom === nom && e.sexe === sexe);
+    return data.eleves.find(e => e.nom === nom) || null;
   };
 
   let results = [];
-  const requiredOui = [0, 1, 2, 2, 3, 4][nbEvals];
 
   baseData.eleves.forEach(el => {
-    const nom = el.nom;
+    const nom  = el.nom;
     const sexe = el.sexe;
-    if (!nom && !sexe) return;
+    if (!nom) return;
 
-    let studentEvals = dataAll.map(d => getStudent(d, nom, sexe));
-    let stats = studentEvals.map((se, idx) => getStudentStats(se, dataAll[idx].seuil || 10));
+    // Récupérer les données de chaque éval pour cet élève
+    const evals = dataAll.map(d => getEleve(d, nom));
+    // eval = { nom, sexe, moy, seuil } ou null si absent
 
-    // Ignore missing students completely from ranking if they have absolutely no notes everywhere
-    let hasAnyNote = stats.some(s => s.seuil !== '—');
-    if (!hasAnyNote) {
-      results.push({ nom, sexe, stats, countOui: 0, Mo: 0, Ma: 0, decision: '—', hasAnyNote: false, conseilMaitres: false, absencePassage: false });
+    // ── Élève totalement absent (aucune moyenne dans aucune éval) ──
+    const totalCompose = evals.filter(e => e && e.moy !== null).length;
+    if (totalCompose === 0) {
+      results.push({ nom, sexe, evals, Mo: null, Ma: null, countOui: 0, totalCompose: 0, decision: 'ABSENT', conseilMaitres: false, absencePassage: false, absentTotal: true });
       return;
     }
 
-    // Détecter les cas spéciaux
-    let lastStatAbsent = (nbEvals > 1) && (stats[nbEvals - 1].seuil === '—'); // absent à la dernière éval (passage)
-    let oldStats = stats.slice(0, nbEvals - 1); // évaluations antérieures (servant à Mo)
-    let validOldStats = oldStats.filter(s => s.seuil !== '—');
-    let nbValidOldStats = validOldStats.length;
-    let nbValidTotal = stats.filter(s => s.seuil !== '—').length;
+    const evalsAnt  = evals.slice(0, nbEvals - 1); // évals antérieures
+    const dernEval  = evals[nbEvals - 1];           // dernière éval (passage)
 
-    let Mo = 0, Ma = 0;
+    const validAnt  = evalsAnt.filter(e => e && e.moy !== null);
+    const dernValide = dernEval && dernEval.moy !== null;
+
+    // ── Cas Conseil des maîtres ──
+    // 1) Aucune éval antérieure ET absent à la dernière
+    // 2) A fait des évals antérieures mais absent à la dernière
+    // 3) Aucune éval antérieure mais présent à la dernière seulement
     let conseilMaitres = false;
     let absencePassage = false;
 
-    if (nbEvals === 1) {
-      // Cas : une seule évaluation dans le système
-      Ma = stats[0].moy;
-      // Si l'élève n'a pas cette unique évaluation → déjà géré (hasAnyNote = false)
-    } else {
-      // Calcul de Mo : moyenne des évaluations antérieures (hors dernière)
-      if (nbValidOldStats > 0) {
-        let sumValid = validOldStats.reduce((acc, s) => acc + s.moy, 0);
-        Mo = sumValid / nbValidOldStats; // Moyenne sur les évals disponibles seulement (pas de 0 pour les absences)
-      } else {
-        // Aucune éval antérieure valide → uniquement la dernière éval disponible
-        Mo = 0;
-      }
-
-      if (lastStatAbsent) {
-        // Absent à la dernière évaluation (éval de passage)
-        // → tiret dans Mo_annuelle, Conseil des maîtres
-        Ma = Mo; // On garde Mo pour la cohérence interne, mais on affichera '—' pour Ma
-        absencePassage = true;
-        conseilMaitres = true;
-      } else {
-        // Présent à la dernière évaluation
-        if (nbValidOldStats === 0) {
-          // Aucune éval antérieure : une seule éval valide au total
-          Mo = stats[nbEvals - 1].moy;
-          Ma = stats[nbEvals - 1].moy;
-          conseilMaitres = true; // Seulement une Mo disponible
-        } else {
-          // Cas normal (éventuellement avec des absences intermédiaires compensées)
-          Ma = (Mo + stats[nbEvals - 1].moy) / 2;
-        }
-      }
-    }
-
-    // Si une seule évaluation valide au total toutes évals confondues → Conseil des maîtres
-    if (nbValidTotal === 1 && !conseilMaitres) {
+    if (!dernValide) {
+      // Absent à la dernière évaluation → Conseil des maîtres
+      conseilMaitres = true;
+      absencePassage = true;
+    } else if (validAnt.length === 0 && nbEvals > 1) {
+      // Présent uniquement à la dernière, aucune éval antérieure → Conseil des maîtres
       conseilMaitres = true;
     }
 
-    let countOui = stats.filter(s => s.seuil === 'OUI').length;
+    // ── Calcul Mo et Ma ──
+    let Mo = null, Ma = null;
+
+    if (nbEvals === 1) {
+      // Une seule éval : Mo = Ma = moy de cette éval
+      Mo = dernValide ? dernEval.moy : null;
+      Ma = Mo;
+    } else {
+      if (validAnt.length > 0) {
+        Mo = validAnt.reduce((s, e) => s + e.moy, 0) / validAnt.length;
+      }
+      if (!absencePassage && Mo !== null) {
+        Ma = (Mo + dernEval.moy) / 2;
+      } else if (!absencePassage && Mo === null) {
+        // Conseil des maîtres : seulement la dernière
+        Ma = dernEval.moy;
+      }
+    }
+
+    // ── Comptage OUI ──
+    const countOui = evals.filter(e => e && e.seuil === 'OUI').length;
+
+    // ── Décision ──
     let decision;
     if (conseilMaitres) {
       decision = 'Conseil des maîtres';
     } else {
-      decision = countOui >= requiredOui ? 'Admis' : 'Redouble';
+      decision = countOui >= seuilOui ? 'PASSE' : 'REDOUBLE';
     }
 
-    results.push({
-      nom, sexe,
-      stats, countOui, Mo, Ma, decision,
-      hasAnyNote, conseilMaitres, absencePassage
-    });
+    results.push({ nom, sexe, evals, Mo, Ma, countOui, totalCompose, decision, conseilMaitres, absencePassage });
   });
 
-  // Sort: Admis first, then Redouble, then Conseil des maîtres (by Ma), then missing
-  let validResults = results.filter(r => r.hasAnyNote);
-  validResults.sort((a, b) => {
-    const order = (d) => d === 'Admis' ? 0 : (d === 'Redouble' ? 1 : 2); // Conseil des maîtres = 2
-    if (order(a.decision) !== order(b.decision)) return order(a.decision) - order(b.decision);
-    return b.Ma - a.Ma;
+  // ── Tri : par nombre de OUI décroissant, puis moyenne décroissante, absents en dernier ──
+  results.sort((a, b) => {
+    if (a.absentTotal && !b.absentTotal) return 1;
+    if (!a.absentTotal && b.absentTotal) return -1;
+    if (a.absentTotal && b.absentTotal) return 0;
+    // Conseil des maîtres après les décisions normales
+    const aC = a.conseilMaitres ? 1 : 0;
+    const bC = b.conseilMaitres ? 1 : 0;
+    if (aC !== bC) return aC - bC;
+    // D'abord par nombre de OUI décroissant
+    if (b.countOui !== a.countOui) return b.countOui - a.countOui;
+    // Ensuite par moyenne décroissante (Ma si dispo, sinon Mo)
+    const ma = a.Ma !== null ? a.Ma : (a.Mo !== null ? a.Mo : -1);
+    const mb = b.Ma !== null ? b.Ma : (b.Mo !== null ? b.Mo : -1);
+    return mb - ma;
   });
 
-  // Assign Ranks — Conseil des maîtres gets '—' rank
-  validResults.forEach((r, i) => {
-    if (r.conseilMaitres) {
-      r.rang = '—';
-    } else if (i > 0 && r.decision === validResults[i-1].decision && r.Ma.toFixed(2) === validResults[i-1].Ma.toFixed(2) && !validResults[i-1].conseilMaitres) {
-      r.rang = validResults[i-1].rang;
+  // ── Rangs ──
+  // Critère 1 : nombre de OUI décroissant
+  // Critère 2 : à OUI égaux, moyenne (Ma ou Mo) décroissante
+  // Conseil des maîtres : classés par Mo
+  // Absents : —
+  let rangCourant = 1;
+  results.forEach((r, i) => {
+    if (r.absentTotal) { r.rang = '—'; return; }
+    // Moyenne de référence : Ma si disponible, sinon Mo (Conseil des maîtres)
+    const moyRef = r.Ma !== null ? r.Ma : (r.Mo !== null ? r.Mo : null);
+    if (moyRef === null) { r.rang = '—'; return; }
+    if (i === 0 || results[i-1].absentTotal) {
+      r.rang = rangCourant;
     } else {
-      // Count only non-conseil ranked before this one
-      r.rang = validResults.slice(0, i).filter(x => !x.conseilMaitres).length + 1;
+      const prev = results[i-1];
+      const prevMoyRef = prev.Ma !== null ? prev.Ma : (prev.Mo !== null ? prev.Mo : null);
+      if (prev.countOui === r.countOui && prevMoyRef !== null && Math.abs(prevMoyRef - moyRef) < 0.005) {
+        r.rang = prev.rang; // ex aequo
+      } else {
+        rangCourant = i + 1;
+        r.rang = rangCourant;
+      }
     }
   });
 
-  // Combine back (put missing students at the end)
-  let missingResults = results.filter(r => !r.hasAnyNote);
-  missingResults.forEach(r => r.rang = '—');
-  let finalResults = validResults.concat(missingResults);
-
-  let index = 1;
-  finalResults.forEach(r => {
-    const colOUI = 'color:#27ae60;font-weight:bold;';
-    const colNON = 'color:#e74c3c;font-weight:bold;';
-    // cDec replaced by cDecStyle below
-
-    const tr = document.createElement('tr');
-    let trHtml = `
-      <td style="text-align:center;">${index}</td>
-      <td style="text-align:left;">${r.nom}</td>
-      <td style="text-align:center;">${r.sexe}</td>`;
-    
-    let pdfRow = [index.toString(), r.nom, r.sexe];
-
-    r.stats.forEach(st => {
-      let color = st.seuil === 'OUI' ? colOUI : (st.seuil === 'NON' ? colNON : '');
-      let cellText = st.seuil !== '—' ? `${st.moy.toFixed(2)} (${st.seuil})` : '—';
-      trHtml += `<td style="text-align:center; font-size:11px; ${color}">${cellText}</td>`;
-      pdfRow.push(cellText);
-    });
-
-    let moAffichage, moyAffichage;
-    if (!r.hasAnyNote) {
-      moAffichage = '—';
-      moyAffichage = '—';
-    } else if (r.absencePassage) {
-      // Absent à la dernière éval (passage) → Mo calculée normalement, Ma = '—'
-      moAffichage = nbEvals > 1 ? r.Mo.toFixed(2) : r.Ma.toFixed(2);
-      moyAffichage = '—';
-    } else if (nbEvals === 1) {
-      moAffichage = r.Ma.toFixed(2);
-      moyAffichage = r.Ma.toFixed(2);
-    } else {
-      moAffichage = r.Mo.toFixed(2);
-      moyAffichage = r.Ma.toFixed(2);
-    }
-
-    const cDecStyle = r.decision === 'Admis' ? colOUI
-      : r.decision === 'Redouble' ? colNON
-      : r.decision === 'Conseil des maîtres' ? 'color:#8e44ad;font-weight:bold;font-size:10px;'
-      : '';
-
-    const passIdx = window.passageDataGlobal.length;
-    trHtml += `
-      <td style="text-align:center; font-weight:bold; color:var(--or);">${moAffichage}</td>
-      <td style="text-align:center; font-weight:bold; background:#edf5f0;">${moyAffichage}</td>
-      <td style="text-align:center; font-weight:bold;">${r.countOui}/${nbEvals}</td>
-      <td style="text-align:center;${cDecStyle}">${r.decision}</td>
-      <td style="text-align:center; font-weight:bold; color:var(--bleu);">${r.rang === '—' ? '—' : (r.rang + (r.rang === 1 ? (r.sexe === 'F' ? '\u00e8re' : 'er') : '\u00e8me'))}</td>
-      <td style="text-align:center;"><button onclick="downloadSinglePassageBulletin(${passIdx})" style="background:var(--vert);color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:11px;" title="Télécharger le bulletin de ${r.nom}">⬇ PDF</button></td>
-    </tr>`;
-    tr.innerHTML = trHtml;
-    tbody.appendChild(tr);
-
-    pdfRow.push(moAffichage);
-    pdfRow.push(moyAffichage);
-    pdfRow.push(`${r.countOui}/${nbEvals}`);
-    pdfRow.push(r.decision);
-    pdfRow.push(r.rang === '—' ? '—' : r.rang + (r.rang === 1 ? (r.sexe === 'F' ? '\u00e8re' : 'er') : '\u00e8me'));
-    
-    window.passageDataGlobal.push(pdfRow);
-    index++;
-  });
-
-  // Calculate annual stats
+  // ── Statistiques ──
   let inscritsG = 0, inscritsF = 0;
   let admisG = 0, admisF = 0;
   let echecG = 0, echecF = 0;
   let conseilG = 0, conseilF = 0;
-  
-  // missingResults contains those who were absent completely. They don't count in 'composants' maybe? Or they do as failed?
-  // User definition: "composants" are those with hasAnyNote.
-  
-  validResults.forEach(r => {
-      if (r.sexe === 'G') inscritsG++;
-      if (r.sexe === 'F') inscritsF++;
-      
-      if (r.decision === 'Admis') {
-          if (r.sexe === 'G') admisG++;
-          if (r.sexe === 'F') admisF++;
-      } else if (r.decision === 'Conseil des maîtres') {
-          if (r.sexe === 'G') conseilG++;
-          if (r.sexe === 'F') conseilF++;
-      } else {
-          if (r.sexe === 'G') echecG++;
-          if (r.sexe === 'F') echecF++;
-      }
-  });
-
   let absentsG = 0, absentsF = 0;
-  missingResults.forEach(r => {
-      if (r.sexe === 'G') { inscritsG++; absentsG++; }
-      if (r.sexe === 'F') { inscritsF++; absentsF++; }
+
+  results.forEach(r => {
+    if (r.sexe === 'M' || r.sexe === 'G') inscritsG++; else inscritsF++;
+    if (r.absentTotal) {
+      if (r.sexe === 'M' || r.sexe === 'G') absentsG++; else absentsF++;
+      return;
+    }
+    if (r.decision === 'PASSE') {
+      if (r.sexe === 'M' || r.sexe === 'G') admisG++; else admisF++;
+    } else if (r.decision === 'Conseil des maîtres') {
+      if (r.sexe === 'M' || r.sexe === 'G') conseilG++; else conseilF++;
+    } else {
+      if (r.sexe === 'M' || r.sexe === 'G') echecG++; else echecF++;
+    }
   });
 
-  let composantsG = admisG + echecG + conseilG;
-  let composantsF = admisF + echecF + conseilF;
-  let composantsT = composantsG + composantsF;
-  let inscritsT = inscritsG + inscritsF;
-  let admisT = admisG + admisF;
-  let echecT = echecG + echecF;
-  let conseilT = conseilG + conseilF;
+  const absentsT    = absentsG + absentsF;
+  const composantsG = admisG + echecG + conseilG;
+  const composantsF = admisF + echecF + conseilF;
+  const composantsT = composantsG + composantsF;
+  const inscritsT   = inscritsG + inscritsF;
+  const admisT      = admisG + admisF;
+  const echecT      = echecG + echecF;
+  const conseilT    = conseilG + conseilF;
+  const fmt = v => isNaN(v) ? '0.00' : v.toFixed(2);
 
-  // Render Stats Table
-  const fmt = (v) => isNaN(v) ? '0.00' : v.toFixed(2);
   let conseilRow = conseilT > 0 ? `
-    <tr style="background:#f5eef8;font-weight:bold;"><td>Conseil des maîtres (à statuer)</td><td>${conseilG}</td><td>${conseilF}</td><td>${conseilT}</td>
-        <td>${fmt(composantsG>0?conseilG/composantsG*100:0)}%</td>
-        <td>${fmt(composantsF>0?conseilF/composantsF*100:0)}%</td>
-        <td>${fmt(composantsT>0?conseilT/composantsT*100:0)}%</td></tr>` : '';
-  let htmlStats = `
+    <tr style="background:#f5eef8;font-weight:bold;"><td>Conseil des maîtres (à statuer)</td>
+    <td>${conseilG}</td><td>${conseilF}</td><td>${conseilT}</td>
+    <td>${fmt(composantsG>0?conseilG/composantsG*100:0)}%</td>
+    <td>${fmt(composantsF>0?conseilF/composantsF*100:0)}%</td>
+    <td>${fmt(composantsT>0?conseilT/composantsT*100:0)}%</td></tr>` : '';
+
+  let absentsRow = absentsT > 0 ? `
+    <tr style="background:#f2f2f2;font-weight:bold;"><td>Absents (N'ont pas composé)</td>
+    <td>${absentsG}</td><td>${absentsF}</td><td>${absentsT}</td>
+    <td>${fmt(inscritsG>0?absentsG/inscritsG*100:0)}%</td>
+    <td>${fmt(inscritsF>0?absentsF/inscritsF*100:0)}%</td>
+    <td>${fmt(inscritsT>0?absentsT/inscritsT*100:0)}%</td></tr>` : '';
+
+  document.getElementById('bilan-stats-body').innerHTML = `
     <tr><td>Inscrits</td><td>${inscritsG}</td><td>${inscritsF}</td><td>${inscritsT}</td>
         <td>${fmt(inscritsT>0?inscritsG/inscritsT*100:0)}%</td>
         <td>${fmt(inscritsT>0?inscritsF/inscritsT*100:0)}%</td>
@@ -4579,25 +4498,72 @@ async function calculerPassage() {
         <td>${fmt(composantsF>0?echecF/composantsF*100:0)}%</td>
         <td>${fmt(composantsT>0?echecT/composantsT*100:0)}%</td></tr>
     ${conseilRow}
-  `;
-  document.getElementById('bilan-stats-body').innerHTML = htmlStats;
+    ${absentsRow}`;
+  const colOUI = 'color:#27ae60;font-weight:bold;';
+  const colNON = 'color:#e74c3c;font-weight:bold;';
 
-  // Psycho Analysis
-  let pct = composantsT > 0 ? (admisT / composantsT * 100) : 0;
-  let psychoText = "";
-  if (pct >= 80) psychoText = `L'année scolaire s'achève sur une note d'excellence avec un taux de réussite de ${fmt(pct)}%. Les apprenants ont brillamment consolidé les savoirs et compétences exigés. Le pourcentage de passage massif témoigne de l'efficacité du contrat didactique et de la pédagogie explicite mise en œuvre tout au long de l'année.`;
-  else if (pct >= 50) psychoText = `Le bilan annuel affiche un taux d'admission satisfaisant de ${fmt(pct)}%. Plus de la moitié des apprenants ont atteint les objectifs de fin de cycle et validé les 2/3 des évaluations. Néanmoins, l'hétérogénéité des résultats et la présence de ${echecT} redoublants appellent à réinvestir massivement dans la remédiation cognitive l'année prochaine.`;
-  else psychoText = `Alerte Rouge : Bilan annuel préoccupant. Avec seulement ${fmt(pct)}% d'admis pour ${echecT} cas de redoublement, les objectifs terminaux de l'année n'ont pas été atteints pour la majorité de la cohorte. Cela dénote des difficultés profondes d'assimilation (Piaget) et la persistance d'obstacles épistémiques. Une refonte totale des pratiques d'enseignement (approche APS) s'impose pour la rentrée prochaine.`;
-  
+  results.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    let trHtml = `
+      <td style="text-align:center;">${idx + 1}</td>
+      <td style="text-align:left;">${r.nom}</td>
+      <td style="text-align:center;">${r.sexe}</td>`;
+
+    let pdfRow = [(idx + 1).toString(), r.nom, r.sexe];
+
+    r.evals.forEach(ev => {
+      if (!ev || ev.moy === null) {
+        trHtml += `<td style="text-align:center;">—</td>`;
+        pdfRow.push('—');
+      } else {
+        const col = ev.seuil === 'OUI' ? colOUI : colNON;
+        const txt = `${ev.moy.toFixed(2)} (${ev.seuil || '—'})`;
+        trHtml += `<td style="text-align:center;font-size:11px;${col}">${txt}</td>`;
+        pdfRow.push(txt);
+      }
+    });
+
+    const moAff  = r.Mo !== null ? r.Mo.toFixed(2) : '—';
+    const maAff  = r.Ma !== null ? r.Ma.toFixed(2) : '—';
+    const cDec   = r.decision === 'PASSE' ? colOUI
+                 : r.decision === 'REDOUBLE' ? colNON
+                 : r.decision === 'ABSENT' ? 'color:#666;font-weight:bold;font-style:italic;'
+                 : 'color:#8e44ad;font-weight:bold;font-size:10px;';
+    const rangAff = r.rang === '—' ? '—'
+                  : r.rang + (r.rang === 1 ? (r.sexe === 'F' ? '\u00e8re' : 'er') : '\u00e8me');
+    const passIdx = window.passageDataGlobal.length;
+    const ouiAff  = r.absentTotal ? '—' : `${r.countOui}/${nbEvals}`;
+
+    trHtml += `
+      <td style="text-align:center;font-weight:bold;color:var(--or);">${moAff}</td>
+      <td style="text-align:center;font-weight:bold;background:#edf5f0;">${maAff}</td>
+      <td style="text-align:center;font-weight:bold;">${ouiAff}</td>
+      <td style="text-align:center;${cDec}">${r.decision}</td>
+      <td style="text-align:center;font-weight:bold;color:var(--bleu);">${rangAff}</td>
+      <td style="text-align:center;"><button onclick="downloadSinglePassageBulletin(${passIdx})" style="background:var(--vert);color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:11px;">⬇ PDF</button></td>
+    </tr>`;
+    tr.innerHTML = trHtml;
+    tbody.appendChild(tr);
+
+    pdfRow.push(moAff, maAff, ouiAff, r.decision, rangAff, r.absencePassage ? '1' : '0', r.totalCompose);
+    window.passageDataGlobal.push(pdfRow);
+  });
+
+  const pct = composantsT > 0 ? (admisT / composantsT * 100) : 0;
+  let psychoText = '';
+  if (pct >= 80) psychoText = `L'année scolaire s'achève sur une note d'excellence avec un taux de réussite de ${fmt(pct)}%. Les apprenants ont brillamment consolidé les savoirs et compétences exigés.`;
+  else if (pct >= 50) psychoText = `Le bilan annuel affiche un taux d'admission satisfaisant de ${fmt(pct)}%. Plus de la moitié des apprenants ont validé les 2/3 des évaluations. Néanmoins, la présence de ${echecT} redoublants appelle à renforcer la remédiation l'année prochaine.`;
+  else psychoText = `Alerte : Bilan annuel préoccupant. Avec seulement ${fmt(pct)}% d'admis pour ${echecT} cas de redoublement, les objectifs de l'année n'ont pas été atteints pour la majorité. Une révision des pratiques pédagogiques s'impose pour la rentrée prochaine.`;
+
   document.getElementById('bilan-psycho-text').innerText = psychoText;
   document.getElementById('bilan-sig-admin').innerText = document.getElementById('bilan-admin-input').value || document.getElementById('admin').value || '—';
   document.getElementById('bilan-sig-directeur').innerText = document.getElementById('bilan-directeur-input').value || document.getElementById('directeur').value || '—';
   document.getElementById('bilan-stats-container').style.display = 'block';
 
-  const moyVals = validResults.filter(r => !r.absencePassage && !isNaN(r.Ma) && isFinite(r.Ma)).map(r => r.Ma);
-  const moyMax = moyVals.length ? Math.max(...moyVals).toFixed(2) : '—';
-  const moyMin = moyVals.length ? Math.min(...moyVals).toFixed(2) : '—';
-  window.bilanStats = { inscritsG, inscritsF, inscritsT, composantsG, composantsF, composantsT, admisG, admisF, admisT, echecG, echecF, echecT, conseilG, conseilF, conseilT, pct, psychoText, moyMax, moyMin };
+  const moyVals = results.filter(r => r.Ma !== null && !isNaN(r.Ma)).map(r => r.Ma);
+  const moyMax  = moyVals.length ? Math.max(...moyVals).toFixed(2) : '—';
+  const moyMin  = moyVals.length ? Math.min(...moyVals).toFixed(2) : '—';
+  window.bilanStats = { inscritsG, inscritsF, inscritsT, composantsG, composantsF, composantsT, admisG, admisF, admisT, echecG, echecF, echecT, conseilG, conseilF, conseilT, absentsG, absentsF, absentsT, pct, psychoText, moyMax, moyMin };
 
   // Sauvegarde automatique apres calcul
   passageSauvegarderAuto();
@@ -4674,8 +4640,8 @@ function exportBilanPDF() {
         }
         // Decision column only: 3 + nbE + 3 (Mo, MoyAnn, OUI, DÉCISION)
         if (colIdx === 3 + nbE + 3) {
-          if (val === 'Admis') { data.cell.styles.textColor = [26, 71, 49]; data.cell.styles.fontStyle = 'bold'; }
-          if (val === 'Redouble') { data.cell.styles.textColor = [192, 57, 43]; data.cell.styles.fontStyle = 'bold'; }
+          if (val === 'PASSE') { data.cell.styles.textColor = [26, 71, 49]; data.cell.styles.fontStyle = 'bold'; }
+          if (val === 'REDOUBLE') { data.cell.styles.textColor = [192, 57, 43]; data.cell.styles.fontStyle = 'bold'; }
         }
         // Mo column: color in gold
         if (colIdx === 3 + nbE) {
@@ -4710,6 +4676,12 @@ function exportBilanPDF() {
     ['Admis', b.admisG, b.admisF, b.admisT, fmt(b.composantsG>0?b.admisG/b.composantsG*100:0)+'%', fmt(b.composantsF>0?b.admisF/b.composantsF*100:0)+'%', fmt(b.composantsT>0?b.admisT/b.composantsT*100:0)+'%'],
     ['Redoublants', b.echecG, b.echecF, b.echecT, fmt(b.composantsG>0?b.echecG/b.composantsG*100:0)+'%', fmt(b.composantsF>0?b.echecF/b.composantsF*100:0)+'%', fmt(b.composantsT>0?b.echecT/b.composantsT*100:0)+'%']
   ];
+  if (b.conseilT > 0) {
+    statBody.push(['Conseil des maîtres', b.conseilG, b.conseilF, b.conseilT, fmt(b.composantsG>0?b.conseilG/b.composantsG*100:0)+'%', fmt(b.composantsF>0?b.conseilF/b.composantsF*100:0)+'%', fmt(b.composantsT>0?b.conseilT/b.composantsT*100:0)+'%']);
+  }
+  if (b.absentsT > 0) {
+    statBody.push(['Absents', b.absentsG, b.absentsF, b.absentsT, fmt(b.inscritsG>0?b.absentsG/b.inscritsG*100:0)+'%', fmt(b.inscritsF>0?b.absentsF/b.inscritsF*100:0)+'%', fmt(b.inscritsT>0?b.absentsT/b.inscritsT*100:0)+'%']);
+  }
 
   doc.autoTable({
     startY: yStat + 5,
@@ -4800,13 +4772,14 @@ function exportPassageBulletinsPdf() {
   const adminName = document.getElementById('bilan-admin-input').value || document.getElementById('admin').value || '';
   const directeurName = document.getElementById('bilan-directeur-input').value || document.getElementById('directeur').value || '';
   const nbEvals = window.nbEvalsGlobal || 3;
-  const reqOui = [0, 1, 2, 2, 3, 4][nbEvals];
+  const reqOui = Math.ceil(nbEvals * 2 / 3);
   const b = window.bilanStats;
   const fmt2 = v => isNaN(v) ? '—' : Number(v).toFixed(2);
 
-  // Colonnes du pdfRow: N°, Nom, Sx, [Eval1..EvalN], Mo, Moy.Ann, OUI/NBE, Decision, Rang
+  // Colonnes du pdfRow: N°, Nom, Sx, [Eval1..EvalN], Mo, Moy.Ann, OUI/NBE, Decision, Rang, AbsPassage, TotalCompose
   const nomIdx = 1, sexeIdx = 2, decisionIdx = 3 + nbEvals + 3, rangIdx = 3 + nbEvals + 4;
   const moIdx = 3 + nbEvals, moyAnnIdx = 3 + nbEvals + 1, ouiIdx = 3 + nbEvals + 2;
+  const absPassageIdx = 3 + nbEvals + 5, totalComposeIdx = 3 + nbEvals + 6;
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let printed = 0;
@@ -4819,10 +4792,19 @@ function exportPassageBulletinsPdf() {
     const moyAnn = row[moyAnnIdx] || '—';
     const Mo = row[moIdx] || '—';
     const oui = row[ouiIdx] || '—';
+    const absPassage = row[absPassageIdx] === '1';
+    const totalCompose = row[totalComposeIdx] !== undefined ? row[totalComposeIdx] : null;
 
-    const isAdmis = decision === 'Admis';
-    const decColor = isAdmis ? [26, 71, 49] : (decision === 'Redouble' ? [192, 57, 43] : [142, 68, 173]);
-    const appr = isAdmis ? 'Admis(e) en classe superieure' : (decision === 'Redouble' ? 'Redoublement' : 'Conseil des maitres');
+    const isAdmis  = decision === 'PASSE';
+    const isAbsent = decision === 'ABSENT';
+    const decColor = isAdmis  ? [26, 71, 49]
+                   : isAbsent ? [100, 100, 100]
+                   : decision === 'REDOUBLE' ? [192, 57, 43]
+                   : [142, 68, 173];
+    const appr = isAdmis  ? 'Admis(e) en classe superieure'
+               : isAbsent ? (sexe === 'F' ? 'Absente' : 'Absent(e)')
+               : decision === 'REDOUBLE' ? 'Redoublement'
+               : 'Conseil des maitres';
 
     if (printed > 0) doc.addPage();
     printed++;
@@ -4878,8 +4860,15 @@ function exportPassageBulletinsPdf() {
     doc.text(sexe || '—', 126, y + 17, { align: 'center' });
     doc.text(cleanForPdf(rang), 152, y + 17, { align: 'center' });
     doc.setTextColor(...decColor);
-    doc.setFontSize(9);
-    doc.text(cleanForPdf(decision), 186, y + 17, { align: 'right' });
+    const decisionLabel = cleanForPdf(decision === 'Conseil des maîtres' ? 'Conseil des maîtres' : decision);
+    doc.setFontSize(decisionLabel.length > 12 ? 6.5 : 9);
+    doc.setFont('helvetica', 'bold');
+    if (decisionLabel.length > 12) {
+      const decLines = doc.splitTextToSize(decisionLabel, 42);
+      doc.text(decLines, 187.5, y + 14, { align: 'center' });
+    } else {
+      doc.text(decisionLabel, 187.5, y + 17, { align: 'center' });
+    }
 
     y += 30;
 
@@ -4887,15 +4876,19 @@ function exportPassageBulletinsPdf() {
     const evalHead = ['Évaluation', 'Moyenne', 'Seuil (OUI/NON)'];
     const evalBody = [];
     for (let e = 0; e < nbEvals; e++) {
-      const cellTxt = row[3 + e] || '—';
-      const parts = cellTxt.split(' (');
-      const mEval = parts[0] || '—';
-      const sEval = parts[1] ? parts[1].replace(')', '') : '—';
       const label = (e === nbEvals - 1 && nbEvals > 1) ? 'Éval ' + (e + 1) + ' (Dernière)' : 'Évaluation ' + (e + 1);
-      evalBody.push([label, mEval, sEval]);
+      if (isAbsent) {
+        evalBody.push([label, '—', '—']);
+      } else {
+        const cellTxt = row[3 + e] || '—';
+        const parts = cellTxt.split(' (');
+        const mEval = parts[0] || '—';
+        const sEval = parts[1] ? parts[1].replace(')', '') : '—';
+        evalBody.push([label, mEval, sEval]);
+      }
     }
-    evalBody.push(['Moyenne des anciennes (Mo)', Mo, '']);
-    evalBody.push(['Moyenne Annuelle', moyAnn, '']);
+    evalBody.push(['Moyenne des anciennes (Mo)', isAbsent ? '—' : Mo, '']);
+    evalBody.push(['Moyenne Annuelle', isAbsent ? '—' : moyAnn, '']);
 
     doc.autoTable({
       startY: y,
@@ -4932,14 +4925,29 @@ function exportPassageBulletinsPdf() {
     y = doc.lastAutoTable.finalY + 6;
 
     // ── OBSERVATION PÉDAGOGIQUE ──
-    let obsPassage = 'L\'élève ' + cleanForPdf(nom) + ' a obtenu ' + oui + ' validation(s) sur ' + nbEvals + ' évaluation(s). ';
-    if (isAdmis) {
-      obsPassage += 'Avec une moyenne annuelle de ' + moyAnn + '/20, ' + (sexe === 'F' ? 'elle satisfait' : 'il satisfait') + ' aux conditions de passage. Encourager la consolidation des acquis pour la prochaine classe.';
-    } else if (decision === 'Redouble') {
-      obsPassage += 'Le critère des 2/3 des évaluations validées n\'est pas atteint (Moy. annuelle : ' + moyAnn + '/20). Un suivi pédagogique renforcé et un soutien parental sont indispensables pour une meilleure progression.';
+    let obsPassage;
+    const genreSujet = sexe === 'F' ? 'elle' : 'il';
+    if (isAbsent) {
+      obsPassage = 'L\'élève ' + cleanForPdf(nom) + ' n\'a participé à aucune évaluation au cours de l\'année scolaire. Aucune décision de passage ne peut être prononcée automatiquement.';
+    } else if (decision === 'Conseil des maîtres') {
+      const nbFait = totalCompose !== null ? totalCompose : '—';
+      if (absPassage) {
+        // Absent à la dernière évaluation (éval de passage)
+        obsPassage = 'L\'élève ' + cleanForPdf(nom) + ' n\'a composé qu\'à ' + nbFait + ' évaluation(s) sur ' + nbEvals + ' et a validé le seuil de réussite à ' + oui + '. N\'ayant pas pris part à la dernière évaluation (évaluation de passage), ' + genreSujet + ' rend le calcul automatique de la moyenne annuelle impossible. Le dossier est soumis au Conseil des maîtres pour délibération. La décision finale sera communiquée après la réunion pédagogique.';
+      } else {
+        // N'a composé qu'à la dernière éval, sans aucune antérieure
+        obsPassage = 'L\'élève ' + cleanForPdf(nom) + ' n\'a composé qu\'à ' + nbFait + ' évaluation(s) sur ' + nbEvals + ' (uniquement la dernière évaluation, évaluation de passage) et a validé le seuil de réussite à ' + oui + '. N\'ayant participé à aucune évaluation antérieure, le calcul automatique de la moyenne annuelle n\'est pas possible. Le dossier est soumis au Conseil des maîtres pour délibération. La décision finale sera communiquée après la réunion pédagogique.';
+      }
     } else {
-      obsPassage += 'Cas particulier soumis au Conseil des maîtres pour délibération. La décision finale sera communiquée après la réunion pédagogique.';
+      obsPassage = 'L\'élève ' + cleanForPdf(nom) + ' a obtenu ' + oui + ' validation(s) sur ' + nbEvals + ' évaluation(s). ';
+      if (isAdmis) {
+        obsPassage += 'Avec une moyenne annuelle de ' + moyAnn + '/20, ' + genreSujet + ' satisfait aux conditions de passage. Encourager la consolidation des acquis pour la prochaine classe.';
+      } else {
+        obsPassage += 'Le critère des 2/3 des évaluations validées n\'est pas atteint (Moy. annuelle : ' + moyAnn + '/20). Un suivi pédagogique renforcé et un soutien parental sont indispensables pour une meilleure progression.';
+      }
     }
+    doc.setFontSize(8.2);
+    doc.setFont('helvetica', 'normal');
     const obsPassLines = doc.splitTextToSize(obsPassage, W - 30);
     const obsPassH = Math.max(obsPassLines.length * 4.2 + 10, 16);
     doc.setFillColor(250, 248, 235);
@@ -4960,7 +4968,7 @@ function exportPassageBulletinsPdf() {
     y += obsPassH + 5;
 
     // ── DÉCISION FINALE ──
-    doc.setFillColor(...(isAdmis ? vert : (decision === 'Redouble' ? [192, 57, 43] : [142, 68, 173])));
+    doc.setFillColor(...(isAdmis ? vert : (decision === 'REDOUBLE' ? [192, 57, 43] : [142, 68, 173])));
     doc.roundedRect(8, y, W - 16, 20, 4, 4, 'F');
     doc.setFillColor(...or);
     doc.roundedRect(8, y, 4, 20, 2, 0, 'F');
@@ -4972,6 +4980,32 @@ function exportPassageBulletinsPdf() {
     doc.setFontSize(14);
     doc.text(cleanForPdf(appr).toUpperCase(), W / 2, y + 16, { align: 'center' });
     y += 26;
+
+    // ── BANDE "DÉCISION FINALE DU CONSEIL" (uniquement si Conseil des maîtres) ──
+    if (decision === 'Conseil des maîtres') {
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(8, y, W - 16, 16, 3, 3, 'F');
+      doc.setDrawColor(...[142, 68, 173]);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(8, y, W - 16, 16, 3, 3, 'S');
+      doc.setTextColor(...[142, 68, 173]);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DÉCISION FINALE DU CONSEIL DES MAÎTRES (à compléter manuellement) :', 12, y + 6);
+      doc.setDrawColor(120, 120, 120);
+      doc.setLineWidth(0.3);
+      // Cases à cocher PASSE / REDOUBLE
+      doc.rect(95, y + 9, 4, 4);
+      doc.setFontSize(8);
+      doc.setTextColor(26, 71, 49);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PASSE', 101, y + 12.3);
+      doc.setDrawColor(120, 120, 120);
+      doc.rect(135, y + 9, 4, 4);
+      doc.setTextColor(192, 57, 43);
+      doc.text('REDOUBLE', 141, y + 12.3);
+      y += 22;
+    }
 
     // ── STATS CLASSE ──
     const statsP = [
