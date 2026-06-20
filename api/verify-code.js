@@ -1,8 +1,11 @@
 // /api/verify-code.js
 // Vercel Serverless Function - verifies and activates access codes against Supabase
+// Durée de validité : 7 mois à compter de la date d'activation
 
 const SUPABASE_URL = 'https://vsvbxuzaypwdbxuegsll.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TfDVmmrvxc-jthBAR32iMw_wfgn_gfC';
+
+const DUREE_VALIDITE_MS = 7 * 30 * 24 * 60 * 60 * 1000; // 7 mois ≈ 210 jours
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,7 +29,7 @@ export default async function handler(req, res) {
 
     const cleanCode = String(code).trim();
 
-    const lookupUrl = `${SUPABASE_URL}/rest/v1/codes_acces?code=eq.${encodeURIComponent(cleanCode)}&select=code,appareil_id`;
+    const lookupUrl = `${SUPABASE_URL}/rest/v1/codes_acces?code=eq.${encodeURIComponent(cleanCode)}&select=code,appareil_id,date_activation,date_expiration`;
     const lookupRes = await fetch(lookupUrl, {
       headers: {
         'apikey': SUPABASE_KEY,
@@ -51,8 +54,26 @@ export default async function handler(req, res) {
     }
 
     if (row.appareil_id && row.appareil_id === deviceId) {
-      return res.status(200).json({ ok: true, alreadyActivated: true });
+      if (row.date_expiration) {
+        const expirationDate = new Date(row.date_expiration);
+        if (Date.now() > expirationDate.getTime()) {
+          return res.status(200).json({
+            ok: false,
+            error: 'code_expired',
+            dateExpiration: row.date_expiration
+          });
+        }
+      }
+      return res.status(200).json({
+        ok: true,
+        alreadyActivated: true,
+        dateActivation: row.date_activation,
+        dateExpiration: row.date_expiration
+      });
     }
+
+    const maintenant = new Date();
+    const dateExpiration = new Date(maintenant.getTime() + DUREE_VALIDITE_MS);
 
     const updateUrl = `${SUPABASE_URL}/rest/v1/codes_acces?code=eq.${encodeURIComponent(cleanCode)}`;
     const updateRes = await fetch(updateUrl, {
@@ -65,7 +86,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         appareil_id: deviceId,
-        date_activation: new Date().toISOString()
+        date_activation: maintenant.toISOString(),
+        date_expiration: dateExpiration.toISOString()
       })
     });
 
@@ -73,9 +95,14 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: 'activation_failed' });
     }
 
-    return res.status(200).json({ ok: true, alreadyActivated: false });
+    return res.status(200).json({
+      ok: true,
+      alreadyActivated: false,
+      dateActivation: maintenant.toISOString(),
+      dateExpiration: dateExpiration.toISOString()
+    });
 
   } catch (err) {
     return res.status(500).json({ ok: false, error: 'server_error', detail: String(err) });
   }
-          }
+  }
