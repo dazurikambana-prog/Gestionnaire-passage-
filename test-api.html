@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic API</title>
+<style>
+  body { font-family: monospace; padding: 20px; background: #111; color: #0f0; }
+  input { font-size: 18px; padding: 8px; width: 200px; }
+  button { font-size: 18px; padding: 8px 16px; margin-left: 8px; }
+  pre { background: #000; padding: 12px; border: 1px solid #0f0; white-space: pre-wrap; word-break: break-all; margin-top: 16px; }
+  .step { color: #ff0; }
+</style>
+</head>
+<body>
+  <h2>Diagnostic /api/verify-code</h2>
+  <input id="code" placeholder="Code à tester" maxlength="5" value="06Dwt">
+  <button onclick="tester()">Tester</button>
+  <pre id="out">En attente...</pre>
+
+  <script>
+    async function tester() {
+      const out = document.getElementById('out');
+      const code = document.getElementById('code').value.trim();
+      let log = '';
+
+      log += '<span class="step">1) URL appelée:</span> ' + window.location.origin + '/api/verify-code\n\n';
+      log += '<span class="step">2) Code envoyé:</span> "' + code + '"\n\n';
+
+      out.innerHTML = log + 'Envoi en cours...';
+
+      try {
+        const resp = await fetch('/api/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code, deviceId: 'test_diagnostic_device' })
+        });
+
+        log += '<span class="step">3) Statut HTTP reçu:</span> ' + resp.status + ' ' + resp.statusText + '\n\n';
+
+        const text = await resp.text();
+        log += '<span class="step">4) Corps de la réponse (brut):</span>\n' + text + '\n\n';
+
+        try {
+          const json = JSON.parse(text);
+          log += '<span class="step">5) JSON parsé:</span>\n' + JSON.stringify(json, null, 2);
+        } catch (e) {
+          log += '<span class="step">5) ERREUR: la réponse n\'est pas du JSON valide</span>\n' + e.message;
+        }
+
+      } catch (err) {
+        log += '<span class="step">ERREUR RÉSEAU (fetch a échoué avant même d\'atteindre le serveur):</span>\n' + err.message + '\n\n';
+        log += 'Cela signifie généralement que /api/verify-code n\'existe pas à cette adresse, ou un problème CORS/réseau.';
+      }
+
+      out.innerHTML = log;
+    }
+  </script>
+</body>
+</html>
