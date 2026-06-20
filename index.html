@@ -432,6 +432,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
 
+  body.ge3-has-expiry-banner .app-header {
+    top: 28px;
+  }
+  body.ge3-has-expiry-banner {
+    padding-top: 28px;
+  }
+
   .header-title {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 22px;
@@ -9747,11 +9754,13 @@ function lockAfficherBandeExpiration(dateActivationIso, dateExpirationIso) {
   const segment = `✦ Activé le ${activationTxt} — Expire le ${expirationTxt} — encore ${jours} jour${jours > 1 ? 's' : ''} `;
   track.textContent = segment + segment;
   bande.style.display = 'block';
+  document.body.classList.add('ge3-has-expiry-banner');
 }
 
 function lockMasquerBandeExpiration() {
   const bande = document.getElementById('lock-expiry-marquee');
   if (bande) bande.style.display = 'none';
+  document.body.classList.remove('ge3-has-expiry-banner');
 }
 
 function lockAfficherExpire(dateExpirationIso) {
