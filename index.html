@@ -3558,7 +3558,10 @@ function generateObservationChefCentre(noteRows, moy, isAdmis, sexe, nom) {
   const moyV = parseFloat(moy);
   if (isNaN(moyV)) return 'Observation non disponible.';
   const designation = (sexe === 'F' ? 'La candidate ' : 'Le candidat ') + (nom || '').trim();
-  const estMatiereEligible = (n) => !n.includes('EPS') && !n.includes('EA/') && n !== 'EA';
+  const estMatiereEligible = (n) => {
+    const u = n.toUpperCase();
+    return !u.includes('EPS') && !u.includes('EA/') && u !== 'EA' && !u.includes('COUTURE') && !u.includes('DESSIN') && !u.includes('VIVANT');
+  };
   const notesValides = noteRows.filter(r => r[1] !== '—' && estMatiereEligible(r[0])).map(r => ({ name: r[0], val: parseFloat(r[1]) })).filter(r => !isNaN(r.val));
   const sorted = [...notesValides].sort((a, b) => b.val - a.val);
   const top2 = sorted.slice(0, 2);
@@ -8057,7 +8060,7 @@ function releveBuildPage(doc, student, info, isFirst) {
   doc.setTextColor(50, 60, 70);
   doc.setFontSize(8.3);
   doc.setFont('helvetica', 'normal');
-  doc.text(obsChefLines, 14, y + 13.5, { lineHeightFactor: 1.35 });
+  justifyText(doc, obsChefLines, 14, y + 13.5, W - 16 - 10, 4.1 * 1.0);
 
   y += obsChefBoxH + 5;
 
