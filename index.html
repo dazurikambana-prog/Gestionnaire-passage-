@@ -3554,6 +3554,34 @@ function generateObservationEleve(noteRows, moy, isAdmis, sexe, seuilVal) {
   return obs;
 }
 
+function generateObservationChefCentre(noteRows, moy, isAdmis, sexe, nom) {
+  const moyV = parseFloat(moy);
+  if (isNaN(moyV)) return 'Observation non disponible.';
+  const designation = (sexe === 'F' ? 'La candidate ' : 'Le candidat ') + (nom || '').trim();
+  const estMatiereEligible = (n) => !n.includes('EPS') && !n.includes('EA/') && n !== 'EA';
+  const notesValides = noteRows.filter(r => r[1] !== '—' && estMatiereEligible(r[0])).map(r => ({ name: r[0], val: parseFloat(r[1]) })).filter(r => !isNaN(r.val));
+  const sorted = [...notesValides].sort((a, b) => b.val - a.val);
+  const top2 = sorted.slice(0, 2);
+  const bot2Names = new Set(top2.map(x => x.name));
+  const bot2 = sorted.slice().reverse().filter(x => !bot2Names.has(x.name)).slice(0, 2);
+  let obs = designation + ' affiche une moyenne de ' + moy + '/20 à cet examen blanc.';
+  if (top2.length > 0) {
+    obs += ' Points forts : ' + top2.map(x => x.name + ' (' + x.val.toFixed(2) + '/20)').join(' et ') + '.';
+  }
+  if (isAdmis) {
+    if (bot2.length > 0) {
+      obs += ' Matières à renforcer avant l\'examen officiel : ' + bot2.map(x => x.name + ' (' + x.val.toFixed(2) + '/20)').join(' et ') + '.';
+    }
+    obs += ' Le seuil de réussite est atteint. À l\'approche de l\'examen, il est conseillé de maintenir ce rythme de travail, avec un dernier effort ciblé sur les matières plus faibles, en lien avec ses enseignants et ses parents.';
+  } else {
+    if (bot2.length > 0) {
+      obs += ' Matières à renforcer en urgence : ' + bot2.map(x => x.name + ' (' + x.val.toFixed(2) + '/20)').join(' et ') + '.';
+    }
+    obs += ' Le seuil de réussite n\'est pas encore atteint. Le temps restant avant l\'examen officiel étant compté, une mobilisation immédiate est nécessaire de la part des enseignants et des parents pour combler ces lacunes avant l\'épreuve.';
+  }
+  return obs;
+}
+
 function justifyText(doc, lines, x, y, maxWidth, lineH) {
   const minSpace = doc.getTextWidth(' ') * 0.6;
   lines.forEach((line, li) => {
@@ -8005,6 +8033,33 @@ function releveBuildPage(doc, student, info, isFirst) {
   });
 
   y += 30;
+
+  // ── BLOC OBSERVATION DU CHEF CENTRE ──
+  const obsChefText = generateObservationChefCentre(noteRows, moyVal, seuilOk, student.sexe, student.nom);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.3);
+  const obsChefLines = doc.splitTextToSize(obsChefText, W - 16 - 10);
+  const obsChefBoxH = Math.max(20, obsChefLines.length * 4.1 + 11);
+
+  doc.setFillColor(244, 248, 253);
+  doc.roundedRect(8, y, W - 16, obsChefBoxH, 3, 3, 'F');
+  doc.setDrawColor(...bleuClair);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(8, y, W - 16, obsChefBoxH, 3, 3, 'S');
+  doc.setFillColor(...bleu);
+  doc.roundedRect(8, y, 3.2, obsChefBoxH, 1.6, 0, 'F');
+
+  doc.setTextColor(...bleu);
+  doc.setFontSize(7.3);
+  doc.setFont('helvetica', 'bold');
+  doc.text('OBSERVATION DU CHEF CENTRE', 14, y + 7);
+
+  doc.setTextColor(50, 60, 70);
+  doc.setFontSize(8.3);
+  doc.setFont('helvetica', 'normal');
+  doc.text(obsChefLines, 14, y + 13.5, { lineHeightFactor: 1.35 });
+
+  y += obsChefBoxH + 5;
 
   // ── SIGNATURE ── ordre officiel : Titre → espace/image → trait → Nom
   // sigY = position du TITRE en haut du bloc (bloc total ~38mm)
