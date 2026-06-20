@@ -3532,7 +3532,8 @@ function generateObservationEleve(noteRows, moy, isAdmis, sexe, seuilVal) {
   const moyV = parseFloat(moy);
   if (isNaN(moyV)) return 'Observation non disponible.';
   const pronoun = sexe === 'F' ? 'Elle' : 'Il';
-  const notesValides = noteRows.filter(r => r[1] !== '—').map(r => ({ name: r[0], val: parseFloat(r[1]) })).filter(r => !isNaN(r.val));
+  const estMatiereEligible = (n) => !n.includes('EPS') && !n.includes('EA/') && n !== 'EA';
+  const notesValides = noteRows.filter(r => r[1] !== '—' && estMatiereEligible(r[0])).map(r => ({ name: r[0], val: parseFloat(r[1]) })).filter(r => !isNaN(r.val));
   const sorted = [...notesValides].sort((a, b) => b.val - a.val);
   const top2 = sorted.slice(0, 2);
   const bot2Names = new Set(top2.map(x => x.name));
