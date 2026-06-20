@@ -825,8 +825,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     margin-top: 24px;
     padding-top: 20px;
     border-top: 2px solid var(--gris-mid);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
   }
-  .sig-block { text-align: center; min-width: 180px; }
+  .sig-block { text-align: center; min-width: 180px; flex-shrink: 0; }
   .sig-role {
     font-size: 11px;
     text-transform: uppercase;
@@ -1733,7 +1736,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
             <div class="sig-role" style="color:var(--or);font-size:13px;">✦ By MAÎTRE MARIANO 3.0 ✦</div>
           </div>
           <div class="sig-block">
-            <div class="sig-role">Le Directeur</div>
+            <div class="sig-role">Le Directeur / La Directrice</div>
             <div class="sig-line"></div>
             <div class="sig-name" id="sig-directeur">—</div>
           </div>
@@ -2216,9 +2219,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         <div style="padding:18px;">
           <div style="font-size:13px;color:#555;margin-bottom:12px;">Dessinez votre signature <strong>une seule fois</strong> dans le cadre ci-dessous (souris ou doigt). Elle sera automatiquement apposée sur tous les relevés générés.</div>
           <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-            <div>
+            <div style="max-width:100%;">
               <canvas id="releve-sig-canvas" width="360" height="120"
-                style="border:2px solid #90a4ae;border-radius:8px;background:#fafafa;cursor:crosshair;touch-action:none;display:block;">
+                style="border:2px solid #90a4ae;border-radius:8px;background:#fafafa;cursor:crosshair;touch-action:none;display:block;max-width:100%;width:360px;height:120px;">
               </canvas>
               <div style="display:flex;gap:8px;margin-top:8px;">
                 <button onclick="releveEffacerSignature()" style="background:#ef5350;color:#fff;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;">🗑️ Effacer</button>
@@ -7764,10 +7767,12 @@ function releveInitCanvas() {
 
   function getPos(e) {
     const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
     if (e.touches) {
-      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+      return { x: (e.touches[0].clientX - r.left) * scaleX, y: (e.touches[0].clientY - r.top) * scaleY };
     }
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
   }
 
   function startDraw(e) {
