@@ -1332,6 +1332,35 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 </head>
 <body>
 
+<!-- ═══════════ ÉCRAN DE VERROUILLAGE PAR CODE D'ACCÈS ═══════════ -->
+<div id="lock-screen" style="position:fixed; inset:0; background:linear-gradient(135deg,#1a4731 0%,#0d2818 100%); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:16px; padding:40px 32px; max-width:380px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.4); text-align:center;">
+    <div style="font-size:48px; margin-bottom:8px;">🔐</div>
+    <div style="font-size:20px; font-weight:bold; color:#1a4731; margin-bottom:4px; font-family:'Courier New',monospace;">MAÎTRE MARIANO</div>
+    <div style="font-size:12px; color:#888; margin-bottom:24px;">Gestionnaire d'Évaluation 3.0</div>
+    <div style="font-size:13px; color:#444; margin-bottom:16px;">Veuillez entrer votre code d'accès personnel pour continuer.</div>
+    <input id="lock-code-input" type="text" maxlength="5" placeholder="• • • • •"
+      style="width:100%; box-sizing:border-box; font-size:24px; text-align:center; letter-spacing:6px; font-weight:bold; padding:14px; border:2px solid #c9972c; border-radius:10px; font-family:'Courier New',monospace; text-transform:none; margin-bottom:14px;"
+      onkeydown="if(event.key==='Enter') lockVerifierCode();">
+    <div id="lock-error-msg" style="color:#c0392b; font-size:12px; font-weight:bold; min-height:16px; margin-bottom:10px;"></div>
+    <button onclick="lockVerifierCode()" style="width:100%; background:#1a4731; color:#fff; border:none; padding:13px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; letter-spacing:1px;">VALIDER</button>
+    <div style="margin-top:18px; font-size:11px; color:#999;">Code perdu ou problème d'accès ?<br>Contactez le concepteur via le bouton WhatsApp.</div>
+  </div>
+</div>
+
+<!-- Bouton flottant WhatsApp - Contact Concepteur (toujours visible) -->
+<a href="https://wa.me/22997919411?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20l%27application%20Gestionnaire%20d%27%C3%89valuation%203.0%20-%20MA%C3%8ETRE%20MARIANO."
+   target="_blank" rel="noopener"
+   title="Contacter le Concepteur sur WhatsApp"
+   style="position:fixed; bottom:22px; right:22px; width:58px; height:58px; background:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.3); z-index:9999999; text-decoration:none; transition:transform 0.2s;"
+   onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+  <svg viewBox="0 0 32 32" width="32" height="32" fill="#ffffff">
+    <path d="M16.001 3C9.107 3 3.5 8.607 3.5 15.5c0 2.49.722 4.81 1.97 6.77L3.6 28.4l6.31-1.84a12.45 12.45 0 0 0 6.09 1.57c6.894 0 12.5-5.607 12.5-12.5S22.895 3 16.001 3zm0 22.6a10.05 10.05 0 0 1-5.13-1.41l-.368-.218-3.74 1.09 1.107-3.63-.24-.374A10.06 10.06 0 0 1 5.9 15.5c0-5.572 4.53-10.1 10.1-10.1s10.1 4.528 10.1 10.1-4.528 10.1-10.1 10.1zm5.55-7.56c-.304-.152-1.797-.886-2.075-.987-.278-.102-.481-.152-.684.152-.203.304-.787.987-.965 1.19-.177.203-.355.228-.658.076-.304-.152-1.283-.473-2.444-1.51-.903-.805-1.512-1.8-1.69-2.104-.177-.304-.019-.469.134-.621.152-.152.34-.395.51-.593.17-.198.227-.34.34-.566.114-.228.057-.426-.038-.59-.095-.165-.595-1.434-.815-1.965-.215-.516-.434-.446-.6-.453-.155-.008-.333-.01-.512-.01-.178 0-.467.067-.713.317-.246.25-.94.92-.94 2.243 0 1.324.957 2.602 1.09 2.78.133.178 1.825 2.785 4.426 3.797 2.6.012 2.6.808 3.066.756.467-.05 1.51-.617 1.724-1.214.213-.597.213-1.108.149-1.214-.064-.105-.247-.17-.55-.32z"/>
+  </svg>
+</a>
+
+<div id="app-content" style="display:none;">
+
 <header class="app-header">
   <div>
     <div class="header-title">📊 Gestionnaire d'Évaluation 3.0</div>
@@ -2530,8 +2559,9 @@ function sigInitCanvas(role) {
 
 function sigEffacer(role) {
   const canvas = document.getElementById('sig-canvas-' + role);
-  if (!canvas) return;
-  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  localStorage.removeItem('ge3_sig_' + role);
+  sigAfficherApercu(role, null);
 }
 
 function sigEnregistrer(role) {
@@ -9655,6 +9685,80 @@ function cep9_initOnglet(){
   cep9_loadConfigFromStorage(true);
 }
 
+</script>
+
+</div><!-- /#app-content -->
+
+<script>
+// ═══════════ SYSTÈME DE VERROUILLAGE PAR CODE D'ACCÈS (via backend Supabase) ═══════════
+
+function lockGetDeviceId() {
+  let id = localStorage.getItem('ge3_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 12);
+    localStorage.setItem('ge3_device_id', id);
+  }
+  return id;
+}
+
+async function lockVerifierCode() {
+  const input = document.getElementById('lock-code-input');
+  const errMsg = document.getElementById('lock-error-msg');
+  const code = input.value.trim();
+
+  if (!code) {
+    errMsg.textContent = 'Veuillez entrer votre code.';
+    return;
+  }
+
+  errMsg.style.color = '#888';
+  errMsg.textContent = 'Vérification en cours...';
+
+  const deviceId = lockGetDeviceId();
+
+  try {
+    const resp = await fetch('/api/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, deviceId })
+    });
+    const data = await resp.json();
+
+    if (!data.ok) {
+      errMsg.style.color = '#c0392b';
+      if (data.error === 'code_already_used') {
+        errMsg.textContent = 'Ce code est déjà utilisé sur un autre appareil.';
+      } else {
+        errMsg.textContent = 'Code invalide. Vérifiez et réessayez.';
+      }
+      input.value = '';
+      input.focus();
+      return;
+    }
+
+    // Code valide et activé (ou déjà activé sur cet appareil)
+    localStorage.setItem('ge3_access_code', code);
+    lockOuvrirApplication();
+
+  } catch (err) {
+    errMsg.style.color = '#c0392b';
+    errMsg.textContent = 'Connexion impossible. Vérifiez votre internet et réessayez.';
+  }
+}
+
+function lockOuvrirApplication() {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = '';
+}
+
+// Au chargement : si un code est déjà mémorisé sur cet appareil, on rouvre directement
+// sans nouvelle vérification réseau (l'activation a déjà eu lieu une fois pour toutes).
+(function lockVerifierAuDemarrage() {
+  const codeEnregistre = localStorage.getItem('ge3_access_code');
+  if (codeEnregistre) {
+    lockOuvrirApplication();
+  }
+})();
 </script>
 
 </body>
