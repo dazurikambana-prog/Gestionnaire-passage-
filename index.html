@@ -1338,15 +1338,26 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     <div style="font-size:48px; margin-bottom:8px;">🔐</div>
     <div style="font-size:20px; font-weight:bold; color:#1a4731; margin-bottom:4px; font-family:'Courier New',monospace;">MAÎTRE MARIANO</div>
     <div style="font-size:12px; color:#888; margin-bottom:24px;">Gestionnaire d'Évaluation 3.0</div>
-    <div style="font-size:13px; color:#444; margin-bottom:16px;">Veuillez entrer votre code d'accès personnel pour continuer.</div>
+    <div id="lock-instruction" style="font-size:13px; color:#444; margin-bottom:16px;">Veuillez entrer votre code d'accès personnel pour continuer.</div>
     <input id="lock-code-input" type="text" maxlength="5" placeholder="• • • • •"
       style="width:100%; box-sizing:border-box; font-size:24px; text-align:center; letter-spacing:6px; font-weight:bold; padding:14px; border:2px solid #c9972c; border-radius:10px; font-family:'Courier New',monospace; text-transform:none; margin-bottom:14px;"
       onkeydown="if(event.key==='Enter') lockVerifierCode();">
     <div id="lock-error-msg" style="color:#c0392b; font-size:12px; font-weight:bold; min-height:16px; margin-bottom:10px;"></div>
-    <button onclick="lockVerifierCode()" style="width:100%; background:#1a4731; color:#fff; border:none; padding:13px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; letter-spacing:1px;">VALIDER</button>
+    <button id="lock-validate-btn" onclick="lockVerifierCode()" style="width:100%; background:#1a4731; color:#fff; border:none; padding:13px; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; letter-spacing:1px;">VALIDER</button>
     <div style="margin-top:18px; font-size:11px; color:#999;">Code perdu ou problème d'accès ?<br>Contactez le concepteur via le bouton WhatsApp.</div>
   </div>
 </div>
+
+<!-- ═══════════ BANDE FILANTE — COMPTE À REBOURS D'EXPIRATION ═══════════ -->
+<div id="lock-expiry-marquee" style="display:none; position:fixed; top:0; left:0; right:0; height:28px; background:#1a4731; color:#f5d98b; z-index:999998; overflow:hidden; white-space:nowrap; font-family:'Courier New',monospace; font-size:12px; font-weight:bold;">
+  <div id="lock-expiry-marquee-track" style="display:inline-block; padding-left:100%; animation:lock-marquee-scroll 18s linear infinite;"></div>
+</div>
+<style>
+@keyframes lock-marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+</style>
 
 <!-- Bouton flottant WhatsApp - Contact Concepteur (toujours visible) -->
 <a href="https://wa.me/22997919411?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20l%27application%20Gestionnaire%20d%27%C3%89valuation%203.0%20-%20MA%C3%8ETRE%20MARIANO."
@@ -9691,6 +9702,10 @@ function cep9_initOnglet(){
 
 <script>
 // ═══════════ SYSTÈME DE VERROUILLAGE PAR CODE D'ACCÈS (via backend Supabase) ═══════════
+// Durée de validité : 7 mois à compter de la date d'activation.
+// Le code est revérifié auprès du serveur à CHAQUE ouverture (pas de confiance
+// aveugle au localStorage), afin que l'expiration et une éventuelle révocation
+// côté Supabase s'appliquent immédiatement, même sur un appareil déjà activé.
 
 function lockGetDeviceId() {
   let id = localStorage.getItem('ge3_device_id');
@@ -9699,6 +9714,49 @@ function lockGetDeviceId() {
     localStorage.setItem('ge3_device_id', id);
   }
   return id;
+}
+
+function lockFormatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function lockJoursRestants(iso) {
+  if (!iso) return null;
+  const diffMs = new Date(iso).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+function lockAfficherBandeExpiration(dateExpirationIso) {
+  const bande = document.getElementById('lock-expiry-marquee');
+  const track = document.getElementById('lock-expiry-marquee-track');
+  if (!dateExpirationIso || !bande || !track) return;
+
+  const jours = lockJoursRestants(dateExpirationIso);
+  const dateTxt = lockFormatDate(dateExpirationIso);
+  track.textContent = `✦ Accès valide encore ${jours} jour${jours > 1 ? 's' : ''} — expire le ${dateTxt} ✦ Accès valide encore ${jours} jour${jours > 1 ? 's' : ''} — expire le ${dateTxt} ✦`;
+  bande.style.display = 'block';
+}
+
+function lockMasquerBandeExpiration() {
+  const bande = document.getElementById('lock-expiry-marquee');
+  if (bande) bande.style.display = 'none';
+}
+
+function lockAfficherExpire(dateExpirationIso) {
+  const errMsg = document.getElementById('lock-error-msg');
+  const instruction = document.getElementById('lock-instruction');
+  const dateTxt = lockFormatDate(dateExpirationIso);
+  if (instruction) {
+    instruction.textContent = `Votre période d'accès de 7 mois est arrivée à expiration (le ${dateTxt}). Contactez le concepteur via WhatsApp pour renouveler.`;
+  }
+  if (errMsg) {
+    errMsg.style.color = '#c0392b';
+    errMsg.textContent = '';
+  }
+  localStorage.removeItem('ge3_access_code');
+  lockMasquerBandeExpiration();
 }
 
 async function lockVerifierCode() {
@@ -9715,6 +9773,12 @@ async function lockVerifierCode() {
   errMsg.textContent = 'Vérification en cours...';
 
   const deviceId = lockGetDeviceId();
+  await lockAppelVerification(code, deviceId, true);
+}
+
+async function lockAppelVerification(code, deviceId, depuisSaisieManuelle) {
+  const input = document.getElementById('lock-code-input');
+  const errMsg = document.getElementById('lock-error-msg');
 
   try {
     const resp = await fetch('/api/verify-code', {
@@ -9725,19 +9789,28 @@ async function lockVerifierCode() {
     const data = await resp.json();
 
     if (!data.ok) {
+      if (data.error === 'code_expired') {
+        lockAfficherExpire(data.dateExpiration);
+        return;
+      }
       errMsg.style.color = '#c0392b';
       if (data.error === 'code_already_used') {
         errMsg.textContent = 'Ce code est déjà utilisé sur un autre appareil.';
       } else {
         errMsg.textContent = 'Code invalide. Vérifiez et réessayez.';
       }
-      input.value = '';
-      input.focus();
+      if (depuisSaisieManuelle) {
+        input.value = '';
+        input.focus();
+      }
       return;
     }
 
     // Code valide et activé (ou déjà activé sur cet appareil)
     localStorage.setItem('ge3_access_code', code);
+    if (data.dateExpiration) {
+      lockAfficherBandeExpiration(data.dateExpiration);
+    }
     lockOuvrirApplication();
 
   } catch (err) {
@@ -9751,12 +9824,19 @@ function lockOuvrirApplication() {
   document.getElementById('app-content').style.display = '';
 }
 
-// Au chargement : si un code est déjà mémorisé sur cet appareil, on rouvre directement
-// sans nouvelle vérification réseau (l'activation a déjà eu lieu une fois pour toutes).
+// Au chargement : si un code est déjà mémorisé sur cet appareil, on le
+// revérifie auprès du serveur (pour appliquer l'expiration à 7 mois et une
+// éventuelle révocation), au lieu de rouvrir l'application sans contrôle.
 (function lockVerifierAuDemarrage() {
   const codeEnregistre = localStorage.getItem('ge3_access_code');
   if (codeEnregistre) {
-    lockOuvrirApplication();
+    const deviceId = lockGetDeviceId();
+    const errMsg = document.getElementById('lock-error-msg');
+    if (errMsg) {
+      errMsg.style.color = '#888';
+      errMsg.textContent = 'Vérification en cours...';
+    }
+    lockAppelVerification(codeEnregistre, deviceId, false);
   }
 })();
 </script>
