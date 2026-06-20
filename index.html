@@ -3703,6 +3703,7 @@ function generateBulletinsPdf(rows, indices, single) {
 
     doc.autoTable({
       startY: y,
+      margin: { left: 8, right: 8 },
       head: [['Matière', 'Note', 'Max', 'Appréciation']],
       body: noteRows,
       styles: { fontSize: 9.5, cellPadding: 2.8, valign: 'middle' },
@@ -3715,10 +3716,10 @@ function generateBulletinsPdf(rows, indices, single) {
       },
       alternateRowStyles: { fillColor: creme },
       columnStyles: {
-        0: { halign: 'left', fontStyle: 'bold', cellWidth: 70 },
+        0: { halign: 'left', fontStyle: 'bold', cellWidth: 64 },
         1: { cellWidth: 22, halign: 'center' },
-        2: { cellWidth: 14, halign: 'center', textColor: [120,120,120] },
-        3: { cellWidth: 84, halign: 'left' }
+        2: { cellWidth: 16, halign: 'center', textColor: [120,120,120] },
+        3: { cellWidth: 92, halign: 'center' }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
@@ -7931,6 +7932,7 @@ function releveBuildPage(doc, student, info, isFirst) {
 
   doc.autoTable({
     startY: y,
+    margin: { left: 8, right: 8 },
     head: [['Mati\u00e8re', 'Note', 'Max', 'Appr\u00e9ciation']],
     body: noteRows,
     styles: { fontSize: 10, cellPadding: 3.5, valign: 'middle' },
@@ -7943,10 +7945,10 @@ function releveBuildPage(doc, student, info, isFirst) {
     },
     alternateRowStyles: { fillColor: creme },
     columnStyles: {
-      0: { halign: 'left', fontStyle: 'bold', cellWidth: 70 },
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 64 },
       1: { cellWidth: 22, halign: 'center' },
-      2: { cellWidth: 14, halign: 'center', textColor: [120, 120, 120] },
-      3: { cellWidth: 84, halign: 'left' }
+      2: { cellWidth: 16, halign: 'center', textColor: [120, 120, 120] },
+      3: { cellWidth: 92, halign: 'center' }
     },
     didParseCell: function(data) {
       if (data.section === 'body') {
