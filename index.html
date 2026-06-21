@@ -4062,6 +4062,9 @@ function clearAll() {
   majBadgeMatieres();
   majAffichageMatieres();
   updateHeader();
+  // Marque l'écran comme "vidé" : une actualisation ne doit plus rien réafficher,
+  // mais la véritable sauvegarde (ge3_saisie_data) reste intacte pour le bouton "Charger".
+  localStorage.setItem('ge3_saisie_data_cleared', '1');
 }
 
 function saveLocalBrowser() {
@@ -4091,12 +4094,14 @@ function saveLocalBrowser() {
     });
   });
   localStorage.setItem('ge3_saisie_data', JSON.stringify(data));
+  localStorage.removeItem('ge3_saisie_data_cleared');
   alert('💾 Données sauvegardées dans le navigateur !');
 }
 
 function loadLocalBrowser() {
   const saved = localStorage.getItem('ge3_saisie_data');
   if (!saved) { alert('⚠️ Aucune sauvegarde trouvée dans le navigateur.'); return; }
+  localStorage.removeItem('ge3_saisie_data_cleared');
   try {
     const data = JSON.parse(saved);
     document.getElementById('ddemp').value = data.ddemp || '';
@@ -4158,6 +4163,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 
 // ── Restauration automatique au démarrage — Onglet 1 ──
 function saisieAutoRestore() {
+  if (localStorage.getItem('ge3_saisie_data_cleared') === '1') return;
   const saved = localStorage.getItem('ge3_saisie_data');
   if (!saved) return;
   try {
@@ -4206,12 +4212,11 @@ function saisieAutoRestore() {
     }
   } catch(e) { console.warn('Saisie auto-restore failed:', e); }
 }
-// Restauration automatique désactivée : les données ne se rechargent
-// désormais que via un clic explicite sur "Charger du navigateur".
-// document.addEventListener('DOMContentLoaded', saisieAutoRestore);
+document.addEventListener('DOMContentLoaded', saisieAutoRestore);
 
 // ── Restauration automatique au démarrage — Onglet 4 ──
 function passageAutoRestore() {
+  if (localStorage.getItem('ge3_passage_data_cleared') === '1') return;
   const saved = localStorage.getItem('ge3_passage_data');
   if (!saved) return;
   try {
@@ -4259,9 +4264,7 @@ function passageAutoRestore() {
     }
   } catch(e) { console.warn('Passage auto-restore failed:', e); }
 }
-// Restauration automatique désactivée : les données ne se rechargent
-// désormais que via un clic explicite sur "Charger du navigateur".
-// document.addEventListener('DOMContentLoaded', passageAutoRestore);
+document.addEventListener('DOMContentLoaded', passageAutoRestore);
 
 // ═══════════════════════════════════════
 //  BILAN DE PASSAGE ANNUEL (DYNAMIQUE)
@@ -6049,6 +6052,7 @@ function passageSauvegarderAuto() {
     });
     data.statsHtmlMap = statsHtmlMap;
     localStorage.setItem('ge3_passage_data', JSON.stringify(data));
+    localStorage.removeItem('ge3_passage_data_cleared');
   } catch(e) { console.warn('Passage autosave failed:', e); }
 }
 
@@ -6061,6 +6065,7 @@ function passageSauvegarder() {
 function passageCharger() {
   const saved = localStorage.getItem('ge3_passage_data');
   if (!saved) { alert('⚠️ Aucune sauvegarde trouvée dans le navigateur.'); return; }
+  localStorage.removeItem('ge3_passage_data_cleared');
   try {
     const data = JSON.parse(saved);
     if (data.nbEvals) {
@@ -6129,6 +6134,7 @@ function passageReinitialiser() {
   // Réinitialiser les données globales
   window.passageDataGlobal = [];
   window.nbEvalsGlobal = 3;
+  localStorage.setItem('ge3_passage_data_cleared', '1');
   alert('✅ Données du Bilan de Passage réinitialisées avec succès !');
 }
 
@@ -6193,6 +6199,7 @@ function cepSauvegarder() {
     students: cepStudents, notes: cepNotes
   };
   localStorage.setItem('cep_blanc_data', JSON.stringify(data));
+  localStorage.removeItem('cep_blanc_data_cleared');
   alert('💾 Données CEP sauvegardées dans le navigateur !');
 }
 
@@ -6210,12 +6217,14 @@ function cepReinitialiser() {
   cepRenderTable();
   cepUpdateSyntheses();
   cepSyncSignatures();
+  localStorage.setItem('cep_blanc_data_cleared', '1');
   alert('✅ Données CEP réinitialisées avec succès !');
 }
 
 function cepCharger() {
   const saved = localStorage.getItem('cep_blanc_data');
   if (!saved) { alert('⚠️ Aucune sauvegarde CEP trouvée.'); return; }
+  localStorage.removeItem('cep_blanc_data_cleared');
   const data = JSON.parse(saved);
   if (data.meta) {
     document.getElementById('cep-centre').value = data.meta.centre || '';
@@ -6237,6 +6246,7 @@ function cepCharger() {
 
 // ── Chargement automatique au démarrage ──
 function cepAutoRestore() {
+  if (localStorage.getItem('cep_blanc_data_cleared') === '1') return;
   const saved = localStorage.getItem('cep_blanc_data');
   if (!saved) return;
   try {
@@ -6259,9 +6269,7 @@ function cepAutoRestore() {
     cepSyncSignatures();
   } catch(e) { console.warn('CEP auto-restore failed:', e); }
 }
-// Restauration automatique désactivée : les données ne se rechargent
-// désormais que via un clic explicite sur "Charger du navigateur".
-// document.addEventListener('DOMContentLoaded', cepAutoRestore);
+document.addEventListener('DOMContentLoaded', cepAutoRestore);
 
 function cepExporterExcel() {
   if (!cepStudents || cepStudents.length === 0) {
@@ -8728,6 +8736,7 @@ function rmLoadData(data) {
 function rmSauvegarder() {
   try {
     localStorage.setItem(RM_KEY, JSON.stringify(rmGetData()));
+    localStorage.removeItem(RM_KEY + '_cleared');
     const st = document.getElementById('rm-status');
     if (st) {
       st.style.display = 'inline-block';
@@ -8743,6 +8752,7 @@ function rmCharger() {
   try {
     const saved = localStorage.getItem(RM_KEY);
     if (!saved) { alert('⚠️ Aucune sauvegarde trouvée dans le navigateur.'); return; }
+    localStorage.removeItem(RM_KEY + '_cleared');
     rmLoadData(JSON.parse(saved));
     alert('🔄 Données des relevés mensuels chargées avec succès !');
   } catch(e) {
@@ -8753,7 +8763,7 @@ function rmCharger() {
 // ── Réinitialiser ──
 function rmEffacer() {
   if (!confirm('Réinitialiser toutes les données des relevés mensuels ?')) return;
-  localStorage.removeItem(RM_KEY);
+  localStorage.setItem(RM_KEY + '_cleared', '1');
   rmBuildTable();
   ['rm-annee','rm-classe','rm-ddemp','rm-dist','rm-ecole','rm-enseignant']
     .forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
@@ -9076,14 +9086,20 @@ function rmExporterPDF() {
 (function rmInit() {
   rmBuildTable();
   try {
-    const saved = localStorage.getItem(RM_KEY);
-    if (saved) rmLoadData(JSON.parse(saved));
+    if (localStorage.getItem(RM_KEY + '_cleared') !== '1') {
+      const saved = localStorage.getItem(RM_KEY);
+      if (saved) rmLoadData(JSON.parse(saved));
+    }
   } catch(e) {}
 
-  // Sauvegarde auto sur changement
+  // Sauvegarde auto sur changement (équivaut à une sauvegarde volontaire :
+  // lève donc le marqueur "cleared" posé par une précédente réinitialisation)
   document.addEventListener('input', function(ev) {
     if (ev.target && (ev.target.classList.contains('rm-input') || ev.target.id.startsWith('rm-'))) {
-      try { localStorage.setItem(RM_KEY, JSON.stringify(rmGetData())); } catch(e){}
+      try {
+        localStorage.setItem(RM_KEY, JSON.stringify(rmGetData()));
+        localStorage.removeItem(RM_KEY + '_cleared');
+      } catch(e){}
     }
   });
 })();
