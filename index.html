@@ -4206,7 +4206,9 @@ function saisieAutoRestore() {
     }
   } catch(e) { console.warn('Saisie auto-restore failed:', e); }
 }
-document.addEventListener('DOMContentLoaded', saisieAutoRestore);
+// Restauration automatique désactivée : les données ne se rechargent
+// désormais que via un clic explicite sur "Charger du navigateur".
+// document.addEventListener('DOMContentLoaded', saisieAutoRestore);
 
 // ── Restauration automatique au démarrage — Onglet 4 ──
 function passageAutoRestore() {
@@ -4257,7 +4259,9 @@ function passageAutoRestore() {
     }
   } catch(e) { console.warn('Passage auto-restore failed:', e); }
 }
-document.addEventListener('DOMContentLoaded', passageAutoRestore);
+// Restauration automatique désactivée : les données ne se rechargent
+// désormais que via un clic explicite sur "Charger du navigateur".
+// document.addEventListener('DOMContentLoaded', passageAutoRestore);
 
 // ═══════════════════════════════════════
 //  BILAN DE PASSAGE ANNUEL (DYNAMIQUE)
@@ -6255,7 +6259,9 @@ function cepAutoRestore() {
     cepSyncSignatures();
   } catch(e) { console.warn('CEP auto-restore failed:', e); }
 }
-document.addEventListener('DOMContentLoaded', cepAutoRestore);
+// Restauration automatique désactivée : les données ne se rechargent
+// désormais que via un clic explicite sur "Charger du navigateur".
+// document.addEventListener('DOMContentLoaded', cepAutoRestore);
 
 function cepExporterExcel() {
   if (!cepStudents || cepStudents.length === 0) {
@@ -8430,6 +8436,11 @@ function releveGenererGroupé() {
     box-shadow: 0 2px 8px rgba(21,101,192,.3);
   }
   .rm-btn-save:hover { background: #1a4f8a; }
+  .rm-btn-load {
+    background: #2e7d32; color: #fff;
+    box-shadow: 0 2px 8px rgba(46,125,50,.3);
+  }
+  .rm-btn-load:hover { background: #245f27; }
   .rm-btn-pdf {
     background: #c62828; color: #fff;
     box-shadow: 0 2px 8px rgba(198,40,40,.25);
@@ -8493,6 +8504,9 @@ function releveGenererGroupé() {
 <div class="rm-actions">
   <button class="rm-btn rm-btn-save" onclick="rmSauvegarder()">
     💾 Sauvegarder
+  </button>
+  <button class="rm-btn rm-btn-load" onclick="rmCharger()">
+    🔄 Charger
   </button>
   <button class="rm-btn rm-btn-pdf" onclick="rmExporterPDF()">
     📄 Télécharger PDF
@@ -8721,6 +8735,18 @@ function rmSauvegarder() {
     }
   } catch(e) {
     alert('Erreur lors de la sauvegarde : ' + e.message);
+  }
+}
+
+// ── Charger (bouton manuel) ──
+function rmCharger() {
+  try {
+    const saved = localStorage.getItem(RM_KEY);
+    if (!saved) { alert('⚠️ Aucune sauvegarde trouvée dans le navigateur.'); return; }
+    rmLoadData(JSON.parse(saved));
+    alert('🔄 Données des relevés mensuels chargées avec succès !');
+  } catch(e) {
+    alert('Erreur lors du chargement : ' + e.message);
   }
 }
 
